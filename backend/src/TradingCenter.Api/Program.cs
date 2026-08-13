@@ -63,6 +63,7 @@ app.UseAuthorization();
 
 // Map Minimal API Endpoint Groups
 app.MapAuthEndpoints();
+app.MapAssetEndpoints();
 app.MapAccountEndpoints();
 app.MapInvestmentEndpoints();
 app.MapTransactionEndpoints();
