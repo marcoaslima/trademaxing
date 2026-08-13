@@ -1,261 +1,201 @@
 <template>
-  <div class="min-h-screen bg-[#0a0e17] text-slate-100 font-sans selection:bg-[#2563eb] selection:text-white flex flex-col">
+  <div class="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-[#2563eb] selection:text-white flex flex-col">
     <!-- Navbar -->
-    <header class="border-b border-slate-800/80 bg-[#0d131f]/90 backdrop-blur-md sticky top-0 z-40">
-      <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <header class="border-b border-zinc-800 bg-[#09090b] sticky top-0 z-40">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#0f4c81] to-[#2563eb] flex items-center justify-center shadow-lg shadow-blue-900/30">
-            <TrendingUp class="w-6 h-6 text-white" />
+          <div class="w-7 h-7 rounded bg-[#1d4ed8] flex items-center justify-center font-bold text-white text-xs">
+            TC
           </div>
-          <div>
-            <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              TRADEMAXING
-              <span class="text-[10px] px-2 py-0.5 rounded bg-blue-950 border border-blue-500/40 text-blue-400 font-mono">PRO</span>
-            </h1>
-            <span class="text-xs text-slate-400 font-mono">Portfolio Dashboard</span>
-          </div>
+          <span class="text-sm font-semibold tracking-tight text-white">TradingCenter</span>
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 text-xs">
           <!-- Currency Display Toggle -->
-          <div class="bg-slate-900 border border-slate-800 p-1 rounded-xl flex items-center">
+          <div class="bg-[#18181b] border border-zinc-800 p-0.5 rounded flex items-center">
             <button
               @click="displayCurrency = 'BRL'"
-              :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition', displayCurrency === 'BRL' ? 'bg-[#2563eb] text-white shadow' : 'text-slate-400 hover:text-white']"
+              :class="['px-2.5 py-1 rounded transition font-mono', displayCurrency === 'BRL' ? 'bg-[#09090b] text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200']"
             >
-              R$ BRL
+              BRL (R$)
             </button>
             <button
               @click="displayCurrency = 'USD'"
-              :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition', displayCurrency === 'USD' ? 'bg-[#2563eb] text-white shadow' : 'text-slate-400 hover:text-white']"
+              :class="['px-2.5 py-1 rounded transition font-mono', displayCurrency === 'USD' ? 'bg-[#09090b] text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200']"
             >
-              $ USD
+              USD ($)
             </button>
           </div>
 
           <!-- Refresh Data -->
           <button
             @click="loadData"
-            class="p-2.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white transition"
+            class="p-2 rounded border border-zinc-800 bg-[#18181b] hover:bg-zinc-800 text-zinc-400 hover:text-white transition"
             title="Refresh Portfolio Data"
           >
-            <RefreshCw :class="['w-4 h-4', portfolioStore.isLoading ? 'animate-spin' : '']" />
+            <RefreshCw :class="['w-3.5 h-3.5', portfolioStore.isLoading ? 'animate-spin' : '']" />
           </button>
 
           <!-- User Info & Logout -->
-          <div class="flex items-center gap-3 pl-3 border-l border-slate-800">
+          <div class="flex items-center gap-3 pl-3 border-l border-zinc-800">
             <div class="text-right hidden sm:block">
-              <span class="block text-xs font-bold text-white">{{ authStore.user?.name || 'Investor' }}</span>
-              <span class="block text-[11px] text-slate-500 font-mono">{{ authStore.user?.email }}</span>
+              <span class="block font-medium text-zinc-200">{{ authStore.user?.name || 'Investor' }}</span>
             </div>
             <button
               @click="handleLogout"
-              class="p-2.5 rounded-xl border border-red-900/40 bg-red-950/20 hover:bg-red-950/60 text-red-400 transition"
+              class="p-2 rounded border border-zinc-800 bg-[#18181b] hover:bg-zinc-800 text-zinc-400 hover:text-white transition"
               title="Logout"
             >
-              <LogOut class="w-4 h-4" />
+              <LogOut class="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Main Body -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8 space-y-8">
-      <!-- Loading Skeleton -->
-      <div v-if="portfolioStore.isLoading && !summary" class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div v-for="i in 4" :key="i" class="h-32 rounded-2xl bg-slate-900/60 animate-pulse border border-slate-800"></div>
-        </div>
+    <!-- Main Content -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-6 py-8 space-y-6">
+      <!-- Loading State -->
+      <div v-if="portfolioStore.isLoading && !summary" class="py-20 text-center text-xs text-zinc-500 font-mono">
+        Loading portfolio engine...
       </div>
 
       <template v-else>
-        <!-- KPI Summary Cards -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <!-- Card 1: Total Net Worth -->
-          <div class="japanese-blue-card p-6 rounded-2xl relative overflow-hidden">
-            <div class="flex justify-between items-center mb-3">
-              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Net Worth</span>
-              <div class="p-2 rounded-lg bg-blue-500/10 text-blue-400">
-                <Wallet class="w-5 h-5" />
-              </div>
-            </div>
-            <div class="text-3xl font-extrabold text-white tracking-tight">
+        <!-- Metric Cards Grid -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Total Net Worth -->
+          <div class="sober-panel p-5 rounded-lg">
+            <span class="text-xs font-mono text-zinc-500 block mb-2">TOTAL NET WORTH</span>
+            <div class="text-2xl font-bold text-white font-mono-numbers">
               {{ formatCurrency(displayCurrency === 'BRL' ? (summary?.totalNetWorthBrl || 0) : (summary?.totalNetWorthUsd || 0)) }}
             </div>
-            <div class="mt-3 text-xs text-slate-400 flex items-center justify-between">
-              <span>Equivalent in {{ displayCurrency === 'BRL' ? 'USD' : 'BRL' }}:</span>
-              <span class="font-mono text-slate-200">
-                {{ formatCurrency(displayCurrency === 'BRL' ? (summary?.totalNetWorthUsd || 0) : (summary?.totalNetWorthBrl || 0), displayCurrency === 'BRL' ? 'USD' : 'BRL') }}
-              </span>
-            </div>
+            <span class="text-xs font-mono text-zinc-500 mt-2 block">
+              Equiv: {{ formatCurrency(displayCurrency === 'BRL' ? (summary?.totalNetWorthUsd || 0) : (summary?.totalNetWorthBrl || 0), displayCurrency === 'BRL' ? 'USD' : 'BRL') }}
+            </span>
           </div>
 
-          <!-- Card 2: Invested Capital -->
-          <div class="japanese-blue-card p-6 rounded-2xl">
-            <div class="flex justify-between items-center mb-3">
-              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Invested Capital</span>
-              <div class="p-2 rounded-lg bg-blue-500/10 text-blue-400">
-                <PiggyBank class="w-5 h-5" />
-              </div>
-            </div>
-            <div class="text-3xl font-extrabold text-white tracking-tight">
+          <!-- Cost Basis -->
+          <div class="sober-panel p-5 rounded-lg">
+            <span class="text-xs font-mono text-zinc-500 block mb-2">INVESTED CAPITAL</span>
+            <div class="text-2xl font-bold text-white font-mono-numbers">
               {{ formatCurrency(displayCurrency === 'BRL' ? (summary?.totalInvestedBrl || 0) : (summary?.totalInvestedUsd || 0)) }}
             </div>
-            <div class="mt-3 text-xs text-slate-400 flex items-center justify-between">
-              <span>Total Cost Basis</span>
-              <span class="font-mono text-slate-400 font-semibold">100% Capital</span>
-            </div>
+            <span class="text-xs font-mono text-zinc-500 mt-2 block">Total Cost Basis</span>
           </div>
 
-          <!-- Card 3: Unrealized Gain / Loss -->
-          <div class="japanese-blue-card p-6 rounded-2xl">
-            <div class="flex justify-between items-center mb-3">
-              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Net Return / Loss</span>
-              <div :class="['p-2 rounded-lg', (summary?.netGainLossBrl || 0) >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400']">
-                <TrendingUp v-if="(summary?.netGainLossBrl || 0) >= 0" class="w-5 h-5" />
-                <TrendingDown v-else class="w-5 h-5" />
-              </div>
-            </div>
-            <div :class="['text-3xl font-extrabold tracking-tight', (summary?.netGainLossBrl || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400']">
+          <!-- Net Return -->
+          <div class="sober-panel p-5 rounded-lg">
+            <span class="text-xs font-mono text-zinc-500 block mb-2">NET GAIN / LOSS</span>
+            <div :class="['text-2xl font-bold font-mono-numbers', (summary?.netGainLossBrl || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400']">
               {{ (summary?.netGainLossBrl || 0) >= 0 ? '+' : '' }}{{ formatCurrency(displayCurrency === 'BRL' ? (summary?.netGainLossBrl || 0) : (summary?.netGainLossUsd || 0)) }}
             </div>
-            <div class="mt-3 text-xs flex items-center justify-between">
-              <span class="text-slate-400">Overall Yield:</span>
-              <span :class="['font-mono font-bold px-2 py-0.5 rounded text-[11px]', (summary?.netGainLossBrl || 0) >= 0 ? 'bg-emerald-950 text-emerald-300' : 'bg-rose-950 text-rose-300']">
-                {{ calculateOverallReturnPct() }}%
-              </span>
-            </div>
+            <span :class="['text-xs font-mono mt-2 block font-semibold', (summary?.netGainLossBrl || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400']">
+              Return: {{ calculateOverallReturnPct() }}%
+            </span>
           </div>
 
-          <!-- Card 4: Official PTAX USD Rate -->
-          <div class="japanese-blue-card p-6 rounded-2xl">
-            <div class="flex justify-between items-center mb-3">
-              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Official PTAX FX</span>
-              <div class="p-2 rounded-lg bg-blue-500/10 text-blue-400">
-                <DollarSign class="w-5 h-5" />
-              </div>
-            </div>
-            <div class="text-3xl font-extrabold text-white tracking-tight font-mono">
+          <!-- PTAX Rate -->
+          <div class="sober-panel p-5 rounded-lg">
+            <span class="text-xs font-mono text-zinc-500 block mb-2">OFFICIAL PTAX RATE</span>
+            <div class="text-2xl font-bold text-white font-mono-numbers">
               R$ {{ (summary?.usdBrlFxRate || 5.50).toFixed(4) }}
             </div>
-            <div class="mt-3 text-xs text-slate-400 flex items-center justify-between">
-              <span>BCB Daily PTAX</span>
-              <span class="font-mono text-blue-400">USD/BRL</span>
-            </div>
+            <span class="text-xs font-mono text-zinc-500 mt-2 block">USD/BRL</span>
           </div>
         </section>
 
-        <!-- Quick Action Bar & Modal Triggers -->
-        <section class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-[#0d131f] p-4 rounded-2xl border border-slate-800">
-          <div class="flex items-center gap-3 w-full sm:w-auto">
+        <!-- Actions Toolbar -->
+        <section class="flex flex-col sm:flex-row justify-between items-center gap-3 bg-[#121215] p-3 rounded-lg border border-zinc-800 text-xs">
+          <div class="flex items-center gap-2 w-full sm:w-auto">
             <button
               @click="showAddAccountModal = true"
-              class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold bg-[#162238] hover:bg-[#1e2d4a] border border-blue-500/30 text-blue-300 flex items-center justify-center gap-2 transition"
+              class="px-3 py-1.5 rounded border border-zinc-800 bg-[#18181b] hover:bg-zinc-800 text-zinc-300 transition"
             >
-              <Plus class="w-4 h-4" />
-              Add Broker Account
+              + Broker Account
             </button>
-
             <button
               @click="showAddAssetModal = true"
-              class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold bg-[#162238] hover:bg-[#1e2d4a] border border-blue-500/30 text-blue-300 flex items-center justify-center gap-2 transition"
+              class="px-3 py-1.5 rounded border border-zinc-800 bg-[#18181b] hover:bg-zinc-800 text-zinc-300 transition"
             >
-              <Plus class="w-4 h-4" />
-              Add Master Asset
+              + Master Asset
             </button>
           </div>
 
           <button
             @click="showAddInvestmentModal = true"
-            class="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-extrabold bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition"
+            class="w-full sm:w-auto px-4 py-1.5 rounded japanese-blue-btn font-medium text-xs"
           >
-            <Plus class="w-4 h-4" />
-            Add Position / Holding
+            + Add Holding
           </button>
         </section>
 
-        <!-- Holdings Positions Table -->
-        <section class="bg-[#0d131f] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-          <div class="p-6 border-b border-slate-800/80 flex items-center justify-between">
-            <div>
-              <h2 class="text-lg font-bold text-white">Master Asset Positions</h2>
-              <p class="text-xs text-slate-400 mt-0.5">Consolidated portfolio holdings across accounts</p>
-            </div>
-            <span class="text-xs font-mono px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300">
-              {{ positions.length }} Position(s)
-            </span>
+        <!-- Positions Table -->
+        <section class="sober-panel rounded-lg overflow-hidden">
+          <div class="p-4 border-b border-zinc-800/80 flex items-center justify-between">
+            <h2 class="text-xs font-mono text-zinc-400 uppercase tracking-wider">Asset Positions</h2>
+            <span class="text-xs font-mono text-zinc-500">{{ positions.length }} item(s)</span>
           </div>
 
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-slate-300">
-              <thead class="bg-[#080c14] text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-[#18181b] text-zinc-400 font-mono border-b border-zinc-800">
                 <tr>
-                  <th class="py-4 px-6">Asset</th>
-                  <th class="py-4 px-4">Category</th>
-                  <th class="py-4 px-4 text-right">Quantity</th>
-                  <th class="py-4 px-4 text-right">Avg Cost</th>
-                  <th class="py-4 px-4 text-right">Current Price</th>
-                  <th class="py-4 px-4 text-right">Total Value</th>
-                  <th class="py-4 px-6 text-right">Gain / Loss</th>
+                  <th class="py-3 px-4 font-normal">Asset</th>
+                  <th class="py-3 px-3 font-normal">Category</th>
+                  <th class="py-3 px-3 font-normal text-right">Qty</th>
+                  <th class="py-3 px-3 font-normal text-right">Avg Cost</th>
+                  <th class="py-3 px-3 font-normal text-right">Current Price</th>
+                  <th class="py-3 px-3 font-normal text-right">Total Value</th>
+                  <th class="py-3 px-4 font-normal text-right">Return</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-800/60 font-mono text-xs">
+              <tbody class="divide-y divide-zinc-800/60 font-mono-numbers">
                 <tr v-if="positions.length === 0">
-                  <td colspan="7" class="py-12 text-center text-slate-500 font-sans">
-                    No active positions found. Click <strong class="text-blue-400 font-semibold">Add Position</strong> to start tracking!
+                  <td colspan="7" class="py-12 text-center text-zinc-500 font-sans">
+                    No active positions found.
                   </td>
                 </tr>
 
-                <tr v-for="pos in positions" :key="pos.investmentId" class="hover:bg-slate-900/60 transition">
-                  <!-- Asset Name & Logo -->
-                  <td class="py-4 px-6 font-sans">
-                    <div class="flex items-center gap-3">
-                      <div class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center overflow-hidden shrink-0">
-                        <img v-if="pos.logoUrl" :src="getLogoUrl(pos.logoUrl)" :alt="pos.name" class="w-6 h-6 object-contain" />
-                        <Building2 v-else class="w-5 h-5 text-slate-500" />
+                <tr v-for="pos in positions" :key="pos.investmentId" class="hover:bg-zinc-900/60 transition">
+                  <td class="py-3 px-4">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-6 h-6 rounded bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                        <img v-if="pos.logoUrl" :src="getLogoUrl(pos.logoUrl)" :alt="pos.name" class="w-4 h-4 object-contain" />
+                        <span v-else class="text-[10px] font-bold text-zinc-500">{{ pos.name.substring(0, 1) }}</span>
                       </div>
                       <div>
-                        <span class="block font-bold text-white text-sm">{{ pos.name }}</span>
-                        <span v-if="pos.ticker" class="text-xs text-blue-400 font-mono">{{ pos.ticker }}</span>
+                        <span class="block font-medium text-white font-sans">{{ pos.name }}</span>
+                        <span v-if="pos.ticker" class="text-[11px] text-zinc-500">{{ pos.ticker }}</span>
                       </div>
                     </div>
                   </td>
 
-                  <!-- Category -->
-                  <td class="py-4 px-4 font-sans">
-                    <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-900 border border-slate-700 text-slate-300">
-                      {{ pos.assetCategory }}
-                    </span>
+                  <td class="py-3 px-3 font-sans text-zinc-400">
+                    {{ pos.assetCategory }}
                   </td>
 
-                  <!-- Quantity -->
-                  <td class="py-4 px-4 text-right font-bold text-white">
+                  <td class="py-3 px-3 text-right text-zinc-200">
                     {{ pos.quantity.toLocaleString() }}
                   </td>
 
-                  <!-- Avg Price -->
-                  <td class="py-4 px-4 text-right text-slate-400">
+                  <td class="py-3 px-3 text-right text-zinc-400">
                     {{ formatCurrency(pos.averagePrice, pos.currency) }}
                   </td>
 
-                  <!-- Current Price -->
-                  <td class="py-4 px-4 text-right font-bold text-blue-400">
+                  <td class="py-3 px-3 text-right text-blue-400 font-semibold">
                     {{ formatCurrency(pos.currentUnitPrice, pos.currency) }}
                   </td>
 
-                  <!-- Total Value -->
-                  <td class="py-4 px-4 text-right font-extrabold text-white text-sm">
+                  <td class="py-3 px-3 text-right font-bold text-white">
                     {{ formatCurrency(pos.currentTotalValue, pos.currency) }}
                   </td>
 
-                  <!-- Gain / Loss -->
-                  <td class="py-4 px-6 text-right">
-                    <div :class="['font-bold', pos.unrealizedGainLoss >= 0 ? 'text-emerald-400' : 'text-rose-400']">
+                  <td class="py-3 px-4 text-right">
+                    <span :class="[pos.unrealizedGainLoss >= 0 ? 'text-emerald-400' : 'text-rose-400']">
                       {{ pos.unrealizedGainLoss >= 0 ? '+' : '' }}{{ formatCurrency(pos.unrealizedGainLoss, pos.currency) }}
-                    </div>
-                    <span :class="['text-[10px] px-1.5 py-0.5 rounded font-bold', pos.unrealizedGainLoss >= 0 ? 'bg-emerald-950 text-emerald-300' : 'bg-rose-950 text-rose-300']">
-                      {{ pos.unrealizedGainLossPercentage >= 0 ? '+' : '' }}{{ pos.unrealizedGainLossPercentage.toFixed(2) }}%
+                    </span>
+                    <span :class="['block text-[10px]', pos.unrealizedGainLoss >= 0 ? 'text-emerald-500' : 'text-rose-500']">
+                      ({{ pos.unrealizedGainLossPercentage >= 0 ? '+' : '' }}{{ pos.unrealizedGainLossPercentage.toFixed(2) }}%)
                     </span>
                   </td>
                 </tr>
@@ -266,42 +206,39 @@
       </template>
     </main>
 
-    <!-- Modal: Add Broker Account -->
-    <div v-if="showAddAccountModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="japanese-blue-card w-full max-w-md p-6 rounded-2xl space-y-4">
-        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <Plus class="w-5 h-5 text-blue-400" /> Add Broker Account
-        </h3>
-        <form @submit.prevent="submitAddAccount" class="space-y-4 text-xs">
+    <!-- Modal: Add Account -->
+    <div v-if="showAddAccountModal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+      <div class="sober-panel w-full max-w-sm p-5 rounded-lg space-y-4 text-xs">
+        <h3 class="font-semibold text-white">Add Broker Account</h3>
+        <form @submit.prevent="submitAddAccount" class="space-y-3">
           <div>
-            <label class="block text-slate-300 font-semibold mb-1">Account Name</label>
-            <input v-model="newAccount.name" type="text" required placeholder="Interactive Brokers US" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-blue-500" />
+            <label class="block text-zinc-400 mb-1">Account Name</label>
+            <input v-model="newAccount.name" type="text" required placeholder="Interactive Brokers US" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none focus:border-blue-500" />
           </div>
           <div>
-            <label class="block text-slate-300 font-semibold mb-1">Institution</label>
-            <input v-model="newAccount.institution" type="text" required placeholder="Caixa / XP / IBKR" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-blue-500" />
+            <label class="block text-zinc-400 mb-1">Institution</label>
+            <input v-model="newAccount.institution" type="text" required placeholder="XP / IBKR / Caixa" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none focus:border-blue-500" />
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-slate-300 font-semibold mb-1">Account Type</label>
-              <select v-model="newAccount.accountType" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-blue-500">
+              <label class="block text-zinc-400 mb-1">Type</label>
+              <select v-model="newAccount.accountType" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none">
                 <option value="Brokerage">Brokerage</option>
                 <option value="Personal">Personal</option>
                 <option value="Retirement_FGTS">Retirement FGTS</option>
-                <option value="Joint">Joint</option>
               </select>
             </div>
             <div>
-              <label class="block text-slate-300 font-semibold mb-1">Currency</label>
-              <select v-model="newAccount.baseCurrency" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-blue-500">
-                <option value="BRL">BRL (R$)</option>
-                <option value="USD">USD ($)</option>
+              <label class="block text-zinc-400 mb-1">Currency</label>
+              <select v-model="newAccount.baseCurrency" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none">
+                <option value="BRL">BRL</option>
+                <option value="USD">USD</option>
               </select>
             </div>
           </div>
-          <div class="flex justify-end gap-3 pt-2">
-            <button type="button" @click="showAddAccountModal = false" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white">Cancel</button>
-            <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold">Save Account</button>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" @click="showAddAccountModal = false" class="px-3 py-1.5 rounded bg-zinc-800 text-zinc-300">Cancel</button>
+            <button type="submit" class="px-4 py-1.5 rounded japanese-blue-btn">Save Account</button>
           </div>
         </form>
       </div>
@@ -314,10 +251,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
-import {
-  TrendingUp, TrendingDown, Wallet, PiggyBank, DollarSign,
-  Plus, RefreshCw, LogOut, Building2
-} from '@lucide/vue';
+import { RefreshCw, LogOut } from '@lucide/vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
