@@ -197,7 +197,14 @@ async function handleRegister() {
     await authStore.register(regName.value, regEmail.value, regPassword.value);
     router.push('/dashboard');
   } catch (err: any) {
-    errorMessage.value = err.response?.data?.message || 'Registration failed. Email may already exist.';
+    if (err.response?.data?.message) {
+      errorMessage.value = err.response.data.message;
+    } else if (err.response?.data?.errors) {
+      const firstError = Object.values(err.response.data.errors)[0] as string[];
+      errorMessage.value = firstError ? firstError[0] : 'Validation failed. Please check your inputs.';
+    } else {
+      errorMessage.value = 'Email already registered. Switch to "Sign In" tab above to log in.';
+    }
   } finally {
     isLoading.value = false;
   }
