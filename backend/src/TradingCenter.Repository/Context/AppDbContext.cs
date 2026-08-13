@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<Asset> Assets => Set<Asset>();
     public DbSet<Investment> Investments => Set<Investment>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<MarketPrice> MarketPrices => Set<MarketPrice>();
@@ -62,6 +63,20 @@ public class AppDbContext : DbContext
             entity.Property(e => e.BaseCurrency).HasConversion<string>().HasMaxLength(10);
         });
 
+        modelBuilder.Entity<Asset>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Ticker).HasMaxLength(50);
+            entity.Property(e => e.AssetCategory).HasConversion<string>().HasMaxLength(50);
+            entity.Property(e => e.ValuationType).HasConversion<string>().HasMaxLength(50);
+            entity.Property(e => e.Currency).HasConversion<string>().HasMaxLength(10);
+            entity.Property(e => e.IndexBenchmark).HasConversion<string>().HasMaxLength(50);
+            entity.Property(e => e.LogoUrl).HasMaxLength(500);
+
+            entity.HasIndex(e => e.Ticker).IsUnique();
+        });
+
         modelBuilder.Entity<Investment>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -70,16 +85,13 @@ public class AppDbContext : DbContext
                   .HasForeignKey(e => e.AccountId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
-            entity.Property(e => e.Ticker).HasMaxLength(50);
-            entity.Property(e => e.AssetCategory).HasConversion<string>().HasMaxLength(50);
-            entity.Property(e => e.ValuationType).HasConversion<string>().HasMaxLength(50);
-            entity.Property(e => e.Currency).HasConversion<string>().HasMaxLength(10);
-            entity.Property(e => e.IndexBenchmark).HasConversion<string>().HasMaxLength(50);
-            entity.Property(e => e.InterestRate).HasPrecision(18, 6);
-            entity.Property(e => e.LogoUrl).HasMaxLength(500);
+            entity.HasOne(e => e.Asset)
+                  .WithMany(a => a.Investments)
+                  .HasForeignKey(e => e.AssetId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasIndex(e => e.Ticker);
+            entity.Property(e => e.CustomName).HasMaxLength(255);
+            entity.Property(e => e.InterestRate).HasPrecision(18, 6);
         });
 
         modelBuilder.Entity<Transaction>(entity =>

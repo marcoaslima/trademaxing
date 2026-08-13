@@ -105,12 +105,13 @@ public class MarketDataSyncService : IMarketDataSyncService
 
     public async Task SyncStockPricesAsync(CancellationToken ct = default)
     {
-        var investments = await _unitOfWork.Repository<Investment>().FindAsync(i => i.ValuationType == ValuationType.TickerMarket && !string.IsNullOrEmpty(i.Ticker), ct);
-        var tickers = investments.Select(i => i.Ticker!).Distinct().ToList();
+        // Query unique tickers from the Master Asset Catalog
+        var assets = await _unitOfWork.Repository<Asset>().FindAsync(a => a.ValuationType == ValuationType.TickerMarket && !string.IsNullOrEmpty(a.Ticker), ct);
+        var tickers = assets.Select(a => a.Ticker!).Distinct().ToList();
 
         if (!tickers.Any())
         {
-            _logger.LogInformation("No active tickers found for market price sync.");
+            _logger.LogInformation("No active tickers found in Master Asset Catalog for price sync.");
             return;
         }
 
@@ -153,7 +154,7 @@ public class MarketDataSyncService : IMarketDataSyncService
                 }
 
                 await _unitOfWork.SaveChangesAsync(ct);
-                _logger.LogInformation("Stock prices updated for {Count} tickers.", results.Count);
+                _logger.LogInformation("Stock prices updated for {Count} unique master tickers.", results.Count);
             }
         }
         catch (Exception ex)
@@ -212,19 +213,18 @@ public class MarketDataSyncService : IMarketDataSyncService
     }
 }
 
-// DTO Helper Classes
-internal record BcbPtaxODataResponse([property: JsonPropertyName("value")] List<BcbPtaxItemDto>? Value);
-internal record BcbPtaxItemDto(
+public record BcbPtaxODataResponse([property: JsonPropertyName("value")] List<BcbPtaxItemDto>? Value);
+public record BcbPtaxItemDto(
     [property: JsonPropertyName("cotacaoCompra")] decimal CotacaoCompra,
     [property: JsonPropertyName("cotacaoVenda")] decimal CotacaoVenda
 );
-internal record BcbSgsPointDto(
+public record BcbSgsPointDto(
     [property: JsonPropertyName("data")] string Data,
     [property: JsonPropertyName("valor")] string Valor
 );
-internal record YahooQuoteResponseDto([property: JsonPropertyName("quoteResponse")] YahooQuoteResultDto? QuoteResponse);
-internal record YahooQuoteResultDto([property: JsonPropertyName("result")] List<YahooQuoteItemDto>? Result);
-internal record YahooQuoteItemDto(
+public record YahooQuoteResponseDto([property: JsonPropertyName("quoteResponse")] YahooQuoteResultDto? QuoteResponse);
+public record YahooQuoteResultDto([property: JsonPropertyName("result")] List<YahooQuoteItemDto>? Result);
+public record YahooQuoteItemDto(
     [property: JsonPropertyName("symbol")] string Symbol,
     [property: JsonPropertyName("regularMarketPrice")] decimal RegularMarketPrice,
     [property: JsonPropertyName("currency")] string Currency

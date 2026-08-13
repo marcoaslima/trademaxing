@@ -24,24 +24,34 @@ CREATE TABLE accounts (
 
 CREATE INDEX idx_accounts_user ON accounts(user_id);
 
--- 3. Investments (Assets) Table
-CREATE TABLE investments (
+-- 3. Master Assets Catalog Table
+CREATE TABLE assets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    ticker VARCHAR(50), -- Nullable for FGTS, US Private Bonds, CDBs
-    asset_category VARCHAR(50) NOT NULL, -- Stock_US, Stock_BR, Bond_US_Public, Bond_US_Private, Bond_BR_FixedIncome, FGTS, etc.
+    ticker VARCHAR(50) UNIQUE, -- Nullable for non-ticker assets like FGTS, US Private Bonds
+    asset_category VARCHAR(50) NOT NULL,
     valuation_type VARCHAR(50) NOT NULL, -- TickerMarket, IndexLinked, FixedRate, ManualBalance
     currency VARCHAR(10) NOT NULL DEFAULT 'BRL',
     index_benchmark VARCHAR(50), -- CDI, IPCA, TR, SELIC, SP500, IBOVESPA, None
-    interest_rate NUMERIC(18, 6), -- e.g. 1.20 for 120% CDI or 0.05 for 5%
-    maturity_date TIMESTAMP WITH TIME ZONE,
     logo_url VARCHAR(500),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX idx_assets_ticker ON assets(ticker);
+
+-- 4. Investments (User Account Holdings) Table
+CREATE TABLE investments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    asset_id UUID NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+    custom_name VARCHAR(255),
+    interest_rate NUMERIC(18, 6), -- e.g. 1.20 for 120% CDI or 0.05 for 5%
+    maturity_date TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX idx_investments_account ON investments(account_id);
-CREATE INDEX idx_investments_ticker ON investments(ticker);
+CREATE INDEX idx_investments_asset ON investments(asset_id);
 
 -- 4. Transactions Table
 CREATE TABLE transactions (

@@ -15,33 +15,25 @@
 - **AccountType**: Enum (`Personal`, `Joint`, `Retirement_FGTS`, `Brokerage`)
 - **BaseCurrency**: Currency (`BRL`, `USD`)
 
-## 3. Investments (Assets)
+## 3. Master Assets (Global Asset Catalog)
+- **Id**: Guid (Primary Key)
+- **Name**: string (e.g. "Apple Inc.", "FGTS Caixa", "Tesouro IPCA+ 2035", "CDB 100% CDI")
+- **Ticker**: string (optional, unique) (e.g. "AAPL", "IVVB11", "PETR4")
+- **AssetCategory**: Enum (`Stock_US`, `Stock_BR`, `Bond_US_Public`, `Bond_US_Private`, `Bond_BR_FixedIncome`, `FGTS`, `Fund_US`, `Fund_BR`, `REIT_US`, `REIT_BR`, `P2P_Lending`)
+- **ValuationType**: Enum (`TickerMarket`, `IndexLinked`, `FixedRate`, `ManualBalance`)
+- **Currency**: Enum (`BRL`, `USD`, `EUR`)
+- **IndexBenchmark**: Enum (optional) (`CDI`, `IPCA`, `TR`, `SELIC`, `SP500`, `IBOVESPA`, `None`)
+- **LogoUrl**: URL string (S3/MinIO/CDN logo URL)
+
+## 4. Investments (User Account Holdings)
 - **Id**: Guid (Primary Key)
 - **AccountId**: Guid (Foreign Key -> Accounts)
-- **Name**: string (e.g. "FGTS Contrato X", "AAPL", "US Private Bond 6% 2029", "CDB Banco Master 120% CDI")
-- **Ticker**: string (optional) (e.g. "AAPL", "IVVB11", "HGLG11")
-- **AssetCategory**: Enum:
-  - `Stock_US`
-  - `Stock_BR`
-  - `Bond_US_Public`
-  - `Bond_US_Private`
-  - `Bond_BR_FixedIncome` (CDB, LCI, LCA, CRI, CRA, Tesouro)
-  - `FGTS`
-  - `Fund_US`
-  - `Fund_BR`
-  - `REIT_US`
-  - `REIT_BR` (FII)
-  - `P2P_Lending`
-- **ValuationType**: Enum:
-  - `TickerMarket`: Priced via stock exchange ticker API (e.g. Yahoo Finance, B3)
-  - `IndexLinked`: Priced via rate accretion (e.g. TR+3% for FGTS, 100% CDI for CDB, IPCA+ for Tesouro)
-  - `FixedRate`: Contractual fixed percentage return or par value schedule
-  - `ManualBalance`: User manual appraisal or direct ledger entry
-- **Currency**: Enum (`BRL`, `USD`, `EUR`, etc.)
-- **IndexBenchmark**: Enum (optional) (`CDI`, `IPCA`, `TR`, `SELIC`, `SP500`, `IBOVESPA`, `None`)
-- **InterestRate**: decimal (optional) (e.g. 1.20 for 120% CDI; 0.05 for 5% p.a.; 0.03 for TR+3%)
+- **AssetId**: Guid (Foreign Key -> Master Assets)
+- **CustomName**: string (optional user display name)
+- **InterestRate**: decimal (optional specific rate e.g. 1.20 for 120% CDI)
 - **MaturityDate**: DateTime (optional)
-- **Logo**: URL to S3/GCP/MinIO/Other hosting service
+- **CreatedAt**: DateTime
+
 
 ## 4. Transactions
 - **Id**: Guid (Primary Key)

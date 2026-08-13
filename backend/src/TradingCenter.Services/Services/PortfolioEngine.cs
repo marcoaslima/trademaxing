@@ -31,7 +31,9 @@ public class PortfolioEngine : IPortfolioEngine
     public async Task<PortfolioSummaryDto> GetPortfolioSummaryAsync(CancellationToken ct = default)
     {
         var investments = await _unitOfWork.Repository<Investment>().GetAllAsync(ct);
+        var assets = await _unitOfWork.Repository<Asset>().GetAllAsync(ct);
         var transactions = await _unitOfWork.Repository<Transaction>().GetAllAsync(ct);
+        var assetDict = assets.ToDictionary(a => a.Id);
         
         // Latest FX rate (USD -> BRL)
         var fxRates = await _unitOfWork.Repository<ExchangeRate>().GetAllAsync(ct);
@@ -46,6 +48,8 @@ public class PortfolioEngine : IPortfolioEngine
 
         foreach (var inv in investments)
         {
+            if (!assetDict.TryGetValue(inv.AssetId, out var asset)) continue;
+
             var invTransactions = transactions.Where(t => t.InvestmentId == inv.Id).ToList();
             if (!invTransactions.Any()) continue;
 
@@ -73,12 +77,14 @@ public class PortfolioEngine : IPortfolioEngine
             if (totalQty <= 0) continue;
 
             decimal avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
-            decimal unitPrice = _valuationCalculator.CalculateCurrentUnitPrice(inv, avgPrice, 0.0004m);
+            decimal unitPrice = _valuationCalculator.CalculateCurrentUnitPrice(asset, inv.InterestRate, avgPrice, 0.0004m);
             decimal currentValue = totalQty * unitPrice;
             decimal pnl = currentValue - totalCost;
             decimal pnlPct = totalCost > 0 ? (pnl / totalCost) * 100m : 0;
 
-            if (inv.Currency == Currency.BRL)
+            var displayName = !string.IsNullOrEmpty(inv.CustomName) ? inv.CustomName : asset.Name;
+
+            if (asset.Currency == Currency.BRL)
             {
                 totalNetWorthBrl += currentValue;
                 totalInvestedBrl += totalCost;
@@ -95,10 +101,10 @@ public class PortfolioEngine : IPortfolioEngine
 
             positions.Add(new PositionSummaryDto(
                 inv.Id,
-                inv.Name,
-                inv.Ticker,
-                inv.AssetCategory.ToString(),
-                inv.ValuationType.ToString(),
+                displayName,
+                asset.Ticker,
+                asset.AssetCategory.ToString(),
+                asset.ValuationType.ToString(),
                 totalQty,
                 avgPrice,
                 totalCost,
@@ -106,8 +112,8 @@ public class PortfolioEngine : IPortfolioEngine
                 currentValue,
                 pnl,
                 pnlPct,
-                inv.Currency.ToString(),
-                inv.LogoUrl
+                asset.Currency.ToString(),
+                asset.LogoUrl
             ));
         }
 

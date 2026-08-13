@@ -14,7 +14,17 @@ public class MappingProfile : Profile
         CreateMap<Account, AccountDto>();
         CreateMap<CreateAccountDto, Account>();
 
-        CreateMap<Investment, InvestmentDto>();
+        CreateMap<Asset, CreateAssetDto>().ReverseMap();
+
+        CreateMap<Investment, InvestmentDto>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Asset.Name))
+            .ForMember(dest => dest.Ticker, opt => opt.MapFrom(src => src.Asset.Ticker))
+            .ForMember(dest => dest.AssetCategory, opt => opt.MapFrom(src => src.Asset.AssetCategory))
+            .ForMember(dest => dest.ValuationType, opt => opt.MapFrom(src => src.Asset.ValuationType))
+            .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Asset.Currency))
+            .ForMember(dest => dest.IndexBenchmark, opt => opt.MapFrom(src => src.Asset.IndexBenchmark))
+            .ForMember(dest => dest.LogoUrl, opt => opt.MapFrom(src => src.Asset.LogoUrl));
+
         CreateMap<CreateInvestmentDto, Investment>();
 
         CreateMap<Transaction, TransactionDto>();
