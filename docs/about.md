@@ -1,49 +1,47 @@
+# TradingCenter Investment Tracking System
 
-application to track my investments accross multiple types and brokers
+Application to track personal investments across multiple asset classes (Stocks, ETFs, US Private Bonds, FGTS, BRL Fixed Income, REITs) and institutions/brokers in BRL and USD.
 
-general features:
-    - users (support multiple users)
-    - accounts (support multiple accounts per user, e.g. personal, joint, etc.)
-    - investments (support multiple investments per account)
-    - transactions (support multiple transactions per investment)
+## Core Domain Hierarchy
+- **Users**: Multi-user support with custom base currency (BRL / USD).
+- **Accounts**: Custody/brokerage accounts per user (e.g. Caixa FGTS, Avenue, Interactive Brokers, XP).
+- **Investments (Assets)**: Assets held in accounts (ticker-based or contractual non-ticker assets like FGTS and Private Bonds).
+- **Transactions**: Financial movement ledger (Buy, Sell, Deposit, Withdrawal, Yield Accrual, Dividend, Coupon, Tax, Fee).
+
+## Technical Requirements
+- **Language**: C# .NET (Minimal APIs)
+- **Database**: PostgreSQL
+- **ORM**: Entity Framework Core (`Npgsql.EntityFrameworkCore.PostgreSQL`)
+- **API**: REST
+- **Design Philosophy**: Minimal abstractions, minimal external dependencies, clean data structures.
+
+## Data Caching & External Financial API Strategy
+- **Store-and-Serve Architecture**: User HTTP requests **NEVER** trigger live calls to external financial APIs. Instead, the backend reads prices from local database tables (`market_prices`, `economic_indexes`, `exchange_rates`) and .NET `IMemoryCache`.
+- **Scheduled Background Polling**: A C# `IHostedService` runs periodically (e.g. 4 times a day during market hours: 10:00, 13:00, 16:00, 18:00 UTC) to fetch updated prices for unique active tickers and economic rates.
+- **Recommended Free APIs**:
+  - **Yahoo Finance** (`USDBRL=X`, US Stocks, B3 Stocks e.g. `PETR4.SA`, `HGLG11.SA`): Free global prices.
+  - **Banco Central do Brasil (BCB) API**: Official free REST API for daily CDI, Selic, TR, IPCA, and USD/BRL official rates.
+  - **Brapi (brapi.dev)**: Free tier for B3 stocks, FIIs, and Brazilian inflation/interest indicators.
+
+## MVP Scope (Backend API)
+- REST API endpoints for User, Account, Asset, Transaction CRUD and Portfolio Net Worth consolidation.
+- Manual transaction & asset entry by the user.
+- Scheduled background fetcher for stock tickers, economic indexes, and exchange rates.
+- In-memory pricing cache layer (`IMemoryCache`).
+
+## Deployment & Infrastructure Strategy
+- **Deployment Platform**: Dokploy (Self-hosted PaaS on dev server)
+- **Containerization**: Docker & Docker Compose (`docker-compose.yml`)
+- **Container Architecture**:
+  - `backend-api`: C# .NET Minimal API container (multi-stage `Dockerfile`)
+  - `postgres-db`: PostgreSQL 16 container with persistent volumes
+  - Automatic environment configuration & database migration execution on startup
+
+## Future Roadmap
+- B3 Open Finance API integration & automated account sync.
+- CSV transaction import.
+- Advanced tax reporting (IR regressivo / GCAP).
+- Frontend UI interface.
 
 
-technical requirements:
-    - Language: C# .NET
-    - Database: PostgreSQL
-    - ORM: Entity Framework
-    - API: REST
-    - prefer to use minimal abstractions
-    - prefer to use minimal external libraries
-    - prefer to use minimal external services
-    - prefer to use minimal external dependencies
-
-
-
-UI requirements:
-    - Clean and modern interface
-    - Support for multiple users
-    - Support for multiple accounts
-    - Support for multiple investments
-    - Support for multiple transactions
-    
-
-MVP - Only the backend. No UI, just the API.
-
-Every day at the closing or of the market a script will have to run to update the values of the investments (for stocks, funds, etfs, etc) against the necessary apis to get dollar prices, stock prices and such. 
-
-Every time the user adds an inestiment the system needs to fetch the current price of the investment to set the initial value of the investment.
-
-Future features:
-    - add CSV import for transactions
-    - add support for multiple currencies
-    - add support for multiple brokers
-    - add support for multiple investment types
-    - add support for multiple transaction types
-    - add support for multiple fund indexes
-    - add support for multiple fund subtypes
-    - add support for multiple bond types
-    - add support for multiple p2p lending types
-    - add support for multiple reit types
-    - add support for multiple stock types
-    - add support for multiple bond types
+
