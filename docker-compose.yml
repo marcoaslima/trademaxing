@@ -35,5 +35,15 @@ services:
       postgres-db:
         condition: service_healthy
 
+  nginx-assets:
+    image: nginx:alpine
+    container_name: tradingcenter-assets
+    restart: always
+    ports:
+      - "8081:80"
+    volumes:
+      - ./assets:/usr/share/nginx/html/assets:ro
+      - ./scripts/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
 volumes:
   postgres_data:

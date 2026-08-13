@@ -35,6 +35,7 @@ Application to track personal investments across multiple asset classes (Stocks,
 - **Container Architecture**:
   - `backend-api`: C# .NET Minimal API container (multi-stage `Dockerfile`)
   - `postgres-db`: PostgreSQL 16 container with persistent volumes
+  - `nginx-assets`: Nginx Alpine container serving static SVG asset logos with CORS enabled (`http://localhost:8081/assets/logos/`)
   - Automatic environment configuration & database migration execution on startup
 
 ## Future Roadmap
