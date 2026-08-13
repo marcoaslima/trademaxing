@@ -10,12 +10,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_dev_pass}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5491}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docs/app.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -u ${POSTGRES_USER:-postgres} -d tradingcenter"]
+      test: [ "CMD-SHELL", "pg_isready -u ${POSTGRES_USER:-postgres} -d tradingcenter" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -27,7 +27,7 @@ services:
     container_name: tradingcenter-api
     restart: always
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres-db;Database=tradingcenter;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres_dev_pass}
     ports:
       - "5000:8080"
