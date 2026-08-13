@@ -1,15 +1,19 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using TradingCenter.Services.Services;
 
 namespace TradingCenter.Api.BackgroundServices;
 
 public class DailyMarketDataSyncWorker : BackgroundService
 {
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<DailyMarketDataSyncWorker> _logger;
     private readonly TimeSpan _checkInterval = TimeSpan.FromHours(4);
 
-    public DailyMarketDataSyncWorker(ILogger<DailyMarketDataSyncWorker> logger)
+    public DailyMarketDataSyncWorker(IServiceScopeFactory scopeFactory, ILogger<DailyMarketDataSyncWorker> logger)
     {
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
@@ -21,8 +25,10 @@ public class DailyMarketDataSyncWorker : BackgroundService
         {
             try
             {
-                _logger.LogInformation("Syncing market closing prices, economic rates (CDI, TR), and FX rates...");
-                // Background price sync logic execution
+                _logger.LogInformation("Triggering automatic market data sync (PTAX USD, Stock Prices, CDI, TR)...");
+                using var scope = _scopeFactory.CreateScope();
+                var syncService = scope.ServiceProvider.GetRequiredService<IMarketDataSyncService>();
+                await syncService.SyncAllMarketDataAsync(stoppingToken);
             }
             catch (Exception ex)
             {

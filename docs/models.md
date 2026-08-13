@@ -100,3 +100,10 @@
 - **NetGainLossBrl**: decimal
 - **NetGainLossUsd**: decimal
 
+## 9. PTAX Rates (Official BCB USD/BRL Rates for Brazilian Tax & GCAP)
+- **Id**: Guid (Primary Key)
+- **RateDate**: Date (Unique)
+- **BuyRate**: decimal (Cotação Compra - used for sales & dividends)
+- **SellRate**: decimal (Cotação Venda - used for acquisitions)
+
+

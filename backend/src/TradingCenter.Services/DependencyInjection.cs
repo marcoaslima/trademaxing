@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<IValuationCalculator, ValuationCalculator>();
         services.AddScoped<IPortfolioEngine, PortfolioEngine>();
+        services.AddHttpClient<IMarketDataSyncService, MarketDataSyncService>();
 
         return services;
     }

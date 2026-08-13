@@ -120,3 +120,15 @@ CREATE TABLE portfolio_daily_snapshots (
 
 CREATE INDEX idx_portfolio_snapshots_user_date ON portfolio_daily_snapshots(user_id, snapshot_date);
 
+-- 9. PTAX Rates Table (Official BCB Buy & Sell Rates for Brazilian Tax / GCAP)
+CREATE TABLE ptax_rates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    rate_date DATE NOT NULL UNIQUE,
+    buy_rate NUMERIC(18, 8) NOT NULL,  -- Cotacao Compra
+    sell_rate NUMERIC(18, 8) NOT NULL, -- Cotacao Venda
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_ptax_rates_date ON ptax_rates(rate_date);
+
+

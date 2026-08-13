@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<EconomicIndex> EconomicIndexes => Set<EconomicIndex>();
     public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
     public DbSet<PortfolioSnapshot> PortfolioSnapshots => Set<PortfolioSnapshot>();
+    public DbSet<PtaxRate> PtaxRates => Set<PtaxRate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -152,6 +153,14 @@ public class AppDbContext : DbContext
             entity.Property(e => e.TotalInvestedUsd).HasPrecision(18, 4);
             entity.Property(e => e.NetGainLossBrl).HasPrecision(18, 4);
             entity.Property(e => e.NetGainLossUsd).HasPrecision(18, 4);
+        });
+
+        modelBuilder.Entity<PtaxRate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.RateDate).IsUnique();
+            entity.Property(e => e.BuyRate).HasPrecision(18, 8);
+            entity.Property(e => e.SellRate).HasPrecision(18, 8);
         });
     }
 }
