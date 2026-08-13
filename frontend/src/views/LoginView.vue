@@ -43,7 +43,7 @@
           </button>
         </div>
 
-        <!-- Alert Error -->
+        <!-- Global Alert Message -->
         <div v-if="errorMessage" class="mb-5 p-3 rounded bg-red-950/40 border border-red-900/60 text-red-300 text-xs flex items-start justify-between gap-2">
           <div class="flex items-start gap-2">
             <AlertCircle class="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
@@ -63,8 +63,9 @@
               type="email"
               required
               placeholder="user@example.com"
-              class="w-full bg-[#18181b] border border-zinc-800 focus:border-[#1d4ed8] rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none"
+              :class="['w-full bg-[#18181b] border rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none transition', fieldErrors.email ? 'border-red-500' : 'border-zinc-800 focus:border-[#1d4ed8]']"
             />
+            <span v-if="fieldErrors.email" class="text-red-400 text-[11px] mt-1 block font-mono">{{ fieldErrors.email }}</span>
           </div>
 
           <div>
@@ -74,8 +75,9 @@
               type="password"
               required
               placeholder="••••••••"
-              class="w-full bg-[#18181b] border border-zinc-800 focus:border-[#1d4ed8] rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none"
+              :class="['w-full bg-[#18181b] border rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none transition', fieldErrors.password ? 'border-red-500' : 'border-zinc-800 focus:border-[#1d4ed8]']"
             />
+            <span v-if="fieldErrors.password" class="text-red-400 text-[11px] mt-1 block font-mono">{{ fieldErrors.password }}</span>
           </div>
 
           <button
@@ -97,8 +99,9 @@
               type="text"
               required
               placeholder="Marco Lima"
-              class="w-full bg-[#18181b] border border-zinc-800 focus:border-[#1d4ed8] rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none"
+              :class="['w-full bg-[#18181b] border rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none transition', fieldErrors.name ? 'border-red-500' : 'border-zinc-800 focus:border-[#1d4ed8]']"
             />
+            <span v-if="fieldErrors.name" class="text-red-400 text-[11px] mt-1 block font-mono">{{ fieldErrors.name }}</span>
           </div>
 
           <div>
@@ -108,19 +111,25 @@
               type="email"
               required
               placeholder="user@example.com"
-              class="w-full bg-[#18181b] border border-zinc-800 focus:border-[#1d4ed8] rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none"
+              :class="['w-full bg-[#18181b] border rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none transition', fieldErrors.email ? 'border-red-500' : 'border-zinc-800 focus:border-[#1d4ed8]']"
             />
+            <span v-if="fieldErrors.email" class="text-red-400 text-[11px] mt-1 block font-mono">{{ fieldErrors.email }}</span>
           </div>
 
           <div>
-            <label class="block font-medium text-zinc-400 mb-1.5">Password</label>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="font-medium text-zinc-400">Password</label>
+              <span class="text-zinc-500 text-[10px] font-mono">6 to 12 chars</span>
+            </div>
             <input
               v-model="regPassword"
               type="password"
               required
+              maxlength="12"
               placeholder="••••••••"
-              class="w-full bg-[#18181b] border border-zinc-800 focus:border-[#1d4ed8] rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none"
+              :class="['w-full bg-[#18181b] border rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none transition', fieldErrors.password ? 'border-red-500' : 'border-zinc-800 focus:border-[#1d4ed8]']"
             />
+            <span v-if="fieldErrors.password" class="text-red-400 text-[11px] mt-1 block font-mono">{{ fieldErrors.password }}</span>
           </div>
 
           <button
@@ -138,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { ArrowLeft, AlertCircle, Loader2 } from '@lucide/vue';
@@ -159,6 +168,16 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const showSwitchToLoginPrompt = ref(false);
 
+const fieldErrors = reactive<{ name?: string; email?: string; password?: string }>({});
+
+function clearErrors() {
+  errorMessage.value = '';
+  showSwitchToLoginPrompt.value = false;
+  fieldErrors.name = undefined;
+  fieldErrors.email = undefined;
+  fieldErrors.password = undefined;
+}
+
 onMounted(() => {
   if (route.query.tab === 'register') {
     activeTab.value = 'register';
@@ -167,17 +186,15 @@ onMounted(() => {
 
 function switchTab(tab: 'login' | 'register') {
   activeTab.value = tab;
-  errorMessage.value = '';
-  showSwitchToLoginPrompt.value = false;
+  clearErrors();
   if (tab === 'login' && regEmail.value) {
     loginEmail.value = regEmail.value;
   }
 }
 
 async function handleLogin() {
+  clearErrors();
   isLoading.value = true;
-  errorMessage.value = '';
-  showSwitchToLoginPrompt.value = false;
   try {
     await authStore.login(loginEmail.value, loginPassword.value);
     router.push('/dashboard');
@@ -189,19 +206,47 @@ async function handleLogin() {
 }
 
 async function handleRegister() {
+  clearErrors();
+
+  // Client-side length checks for immediate feedback
+  if (regName.value.length < 2) {
+    fieldErrors.name = 'Full name must be at least 2 characters.';
+    errorMessage.value = 'Name field is too short.';
+    return;
+  }
+  if (regPassword.value.length < 6 || regPassword.value.length > 12) {
+    fieldErrors.password = 'Password must be between 6 and 12 characters.';
+    errorMessage.value = 'Password length must be between 6 and 12 characters.';
+    return;
+  }
+
   isLoading.value = true;
-  errorMessage.value = '';
-  showSwitchToLoginPrompt.value = false;
   try {
     await authStore.register(regName.value, regEmail.value, regPassword.value);
     router.push('/dashboard');
   } catch (err: any) {
-    const msg = err.response?.data?.message || '';
-    if (msg.includes('already exists') || err.response?.status === 400) {
+    const data = err.response?.data;
+    
+    if (data?.message?.includes('already exists')) {
       errorMessage.value = `An account for ${regEmail.value} already exists in database.`;
+      fieldErrors.email = 'Email already registered.';
       showSwitchToLoginPrompt.value = true;
+    } else if (data?.errors) {
+      // Map ASP.NET Core ValidationProblem dictionary into field errors
+      if (data.errors.Email || data.errors.email) {
+        fieldErrors.email = (data.errors.Email || data.errors.email)[0];
+      }
+      if (data.errors.Password || data.errors.password) {
+        fieldErrors.password = (data.errors.Password || data.errors.password)[0];
+      }
+      if (data.errors.Name || data.errors.name) {
+        fieldErrors.name = (data.errors.Name || data.errors.name)[0];
+      }
+      errorMessage.value = fieldErrors.password || fieldErrors.email || fieldErrors.name || 'Validation failed for submitted inputs.';
+    } else if (data?.message) {
+      errorMessage.value = data.message;
     } else {
-      errorMessage.value = 'Registration failed. Please verify your inputs.';
+      errorMessage.value = 'Registration failed. Please check inputs and server connection.';
     }
   } finally {
     isLoading.value = false;
