@@ -46,7 +46,7 @@ services:
     container_name: tradingcenter-ui
     restart: always
     ports:
-      - "3000:80"
+      - "3654:80"
     depends_on:
       - backend-api
 
