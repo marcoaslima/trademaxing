@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-dark: #0a0e17;
+    --card-bg: #111827;
+    --card-border: #1e293b;
+    --japanese-blue: #0f4c81;
+    --japanese-blue-accent: #2563eb;
+    --japanese-blue-glow: rgba(37, 99, 235, 0.15);
+  }
+
+  body {
+    background-color: var(--bg-dark);
+    color: #f8fafc;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Glassmorphism & Japanese Blue Glow Effects */
+.glass-panel {
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.japanese-blue-card {
+  background: linear-gradient(135deg, rgba(15, 76, 129, 0.3) 0%, rgba(10, 14, 23, 0.95) 100%);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  box-shadow: 0 8px 32px 0 rgba(15, 76, 129, 0.2);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0e17;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
