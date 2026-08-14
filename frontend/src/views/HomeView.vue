@@ -1,104 +1,104 @@
 <template>
-  <div class="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans selection:bg-[#2563eb] selection:text-white">
+  <div class="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans selection:bg-[#059669] selection:text-white">
     <!-- Navbar -->
-    <header class="border-b border-zinc-800/80 bg-[#09090b]">
+    <header class="border-b border-slate-200 bg-white sticky top-0 z-40 shadow-xs">
       <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded bg-[#1d4ed8] flex items-center justify-center font-bold text-white text-sm">
+          <div class="w-8 h-8 rounded-lg bg-[#059669] flex items-center justify-center font-bold text-white text-sm shadow-xs">
             TC
           </div>
-          <span class="text-sm font-semibold tracking-tight text-white">TradingCenter</span>
+          <span class="text-sm font-bold tracking-tight text-slate-900">TradingCenter</span>
         </div>
 
         <div class="flex items-center gap-3">
           <router-link
             v-if="!authStore.isAuthenticated"
             to="/login"
-            class="px-4 py-1.5 rounded text-xs font-medium text-zinc-400 hover:text-white transition"
+            class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition"
           >
-            Sign In
+            Entrar
           </router-link>
           <router-link
             v-if="!authStore.isAuthenticated"
             to="/login?tab=register"
-            class="px-4 py-1.5 rounded text-xs font-medium japanese-blue-btn"
+            class="px-4 py-2 rounded-lg text-xs font-bold bg-[#059669] hover:bg-[#047857] text-white shadow-xs transition"
           >
-            Get Started
+            Criar Conta
           </router-link>
           <router-link
             v-else
             to="/dashboard"
-            class="px-4 py-1.5 rounded text-xs font-medium japanese-blue-btn"
+            class="px-4 py-2 rounded-lg text-xs font-bold bg-[#059669] hover:bg-[#047857] text-white shadow-xs transition"
           >
-            Open Dashboard
+            Abrir Carteira
           </router-link>
         </div>
       </div>
     </header>
 
     <!-- Hero Section -->
-    <main class="flex-1 max-w-4xl mx-auto px-6 py-24 flex flex-col justify-center items-start">
-      <div class="text-xs font-mono text-zinc-500 uppercase tracking-widest mb-4">
-        Portfolio Management Engine
+    <main class="flex-1 max-w-4xl mx-auto px-6 py-20 flex flex-col justify-center items-start">
+      <div class="text-xs font-mono text-[#059669] font-bold uppercase tracking-wider mb-4 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+        Consolidador Inteligente de Investimentos
       </div>
 
-      <h1 class="text-4xl sm:text-6xl font-semibold tracking-tight text-white leading-tight mb-6">
-        Consolidated tracking for heterogeneous investments.
+      <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight mb-6">
+        Gestão minimalista e unificada para seu patrimônio global.
       </h1>
 
-      <p class="text-zinc-400 text-base sm:text-lg max-w-2xl mb-10 leading-relaxed font-normal">
-        Track FGTS, US Private Bonds, BRL Fixed Income, and Global Equities across multiple broker accounts with official BCB PTAX tax calculations.
+      <p class="text-slate-600 text-base sm:text-lg max-w-2xl mb-10 leading-relaxed font-normal">
+        Acompanhe ações do Brasil e Exterior, FGTS, Renda Fixa e Cripto em múltiplas corretoras com conversão PTAX oficial do Banco Central.
       </p>
 
-      <div class="flex items-center gap-4 mb-20">
+      <div class="flex items-center gap-4 mb-16">
         <router-link
           to="/login"
-          class="px-6 py-2.5 rounded text-sm font-medium japanese-blue-btn flex items-center gap-2"
+          class="px-6 py-3 rounded-xl text-sm font-bold bg-[#059669] hover:bg-[#047857] text-white flex items-center gap-2 shadow-xs transition"
         >
-          Access Platform
+          Acessar Plataforma
           <ArrowRight class="w-4 h-4" />
         </router-link>
         <router-link
           to="/login?tab=register"
-          class="px-6 py-2.5 rounded text-sm font-medium border border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white transition"
+          class="px-6 py-3 rounded-xl text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition shadow-xs"
         >
-          Create Account
+          Criar Conta Grátis
         </router-link>
       </div>
 
-      <!-- Feature Table -->
-      <div class="w-full border-t border-zinc-800/80 pt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="sober-panel p-6 rounded-lg">
-          <div class="text-xs font-mono text-blue-400 mb-2">01 / TAX & FX</div>
-          <h3 class="text-sm font-semibold text-white mb-2">Official PTAX Calculation</h3>
-          <p class="text-xs text-zinc-400 leading-relaxed">
-            Automated daily BCB SGS integration for acquisition and sale tax conversion under Receita Federal GCAP rules.
+      <!-- Feature Table Grid -->
+      <div class="w-full border-t border-slate-200 pt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
+          <div class="text-xs font-mono font-bold text-[#059669] mb-2">01 / CÂMBIO & IMPOSTOS</div>
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Conversão PTAX Oficial</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Integração automatizada com API do Banco Central para cotações diárias de aquisição e venda conforme Receita Federal.
           </p>
         </div>
 
-        <div class="sober-panel p-6 rounded-lg">
-          <div class="text-xs font-mono text-blue-400 mb-2">02 / ARCHITECTURE</div>
-          <h3 class="text-sm font-semibold text-white mb-2">Multi-Tenant Isolation</h3>
-          <p class="text-xs text-zinc-400 leading-relaxed">
-            Database-level user data segregation enforced by EF Core Global Query Filters.
+        <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
+          <div class="text-xs font-mono font-bold text-[#059669] mb-2">02 / SEGURANÇA</div>
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Isolamento de Dados</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Segregação completa de carteiras e transações por usuário com autenticação JWT e criptografia.
           </p>
         </div>
 
-        <div class="sober-panel p-6 rounded-lg">
-          <div class="text-xs font-mono text-blue-400 mb-2">03 / CATALOG</div>
-          <h3 class="text-sm font-semibold text-white mb-2">Master Assets Catalog</h3>
-          <p class="text-xs text-zinc-400 leading-relaxed">
-            Single-query ticker pricing pipeline eliminating duplicate external API roundtrips.
+        <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs">
+          <div class="text-xs font-mono font-bold text-[#059669] mb-2">03 / PERFORMANCE</div>
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Catálogo Master de Ativos</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Mapeamento unificado de tickers e cotações sem duplicar requisições em APIs externas.
           </p>
         </div>
       </div>
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-zinc-800/80 py-6 text-xs text-zinc-600">
+    <footer class="border-t border-slate-200 bg-white py-6 text-xs text-slate-500">
       <div class="max-w-6xl mx-auto px-6 flex justify-between items-center font-mono">
         <span>TradingCenter © 2026</span>
-        <span>Minimalist Finance Engine</span>
+        <span>Plataforma Minimalista de Investimentos</span>
       </div>
     </footer>
   </div>

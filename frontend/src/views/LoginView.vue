@@ -1,125 +1,125 @@
 <template>
-  <div class="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col justify-center items-center p-6 font-sans">
-    <router-link to="/" class="absolute top-8 left-8 flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300 font-mono transition">
+  <div class="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col justify-center items-center p-6 font-sans">
+    <router-link to="/" class="absolute top-8 left-8 flex items-center gap-2 text-xs text-slate-500 hover:text-slate-900 font-mono transition">
       <ArrowLeft class="w-3.5 h-3.5" />
-      Back
+      Voltar
     </router-link>
 
     <div class="w-full max-w-sm">
       <!-- Header -->
-      <div class="mb-6">
-        <div class="flex items-center gap-2 mb-2">
-          <div class="w-6 h-6 rounded bg-[#1d4ed8] flex items-center justify-center font-bold text-white text-xs">
+      <div class="mb-6 text-center">
+        <div class="inline-flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-lg bg-[#059669] flex items-center justify-center font-bold text-white text-xs shadow-xs">
             TC
           </div>
-          <span class="text-sm font-semibold text-white">TradingCenter</span>
+          <span class="text-base font-bold text-slate-900 tracking-tight">TradingCenter</span>
         </div>
-        <h2 class="text-xl font-semibold text-white tracking-tight">
-          {{ activeTab === 'login' ? 'Sign in to your account' : 'Create a new account' }}
+        <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">
+          {{ activeTab === 'login' ? 'Acessar sua conta' : 'Criar nova conta' }}
         </h2>
       </div>
 
       <!-- Auth Card -->
-      <div class="sober-panel p-6 rounded-lg">
+      <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
         <!-- Tabs -->
-        <div class="grid grid-cols-2 gap-1 bg-[#18181b] p-1 rounded mb-6 text-xs font-medium">
+        <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl mb-6 text-xs font-medium">
           <button
             @click="switchTab('login')"
             :class="[
-              'py-1.5 rounded transition-colors',
-              activeTab === 'login' ? 'bg-[#09090b] text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+              'py-2 rounded-lg transition-colors font-bold',
+              activeTab === 'login' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
             ]"
           >
-            Sign In
+            Entrar
           </button>
           <button
             @click="switchTab('register')"
             :class="[
-              'py-1.5 rounded transition-colors',
-              activeTab === 'register' ? 'bg-[#09090b] text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+              'py-2 rounded-lg transition-colors font-bold',
+              activeTab === 'register' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
             ]"
           >
-            Register
+            Cadastrar
           </button>
         </div>
 
         <!-- Global Alert Message -->
-        <div v-if="errorMessage" class="mb-5 p-3 rounded bg-red-950/40 border border-red-900/60 text-red-300 text-xs flex items-start justify-between gap-2">
+        <div v-if="errorMessage" class="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start justify-between gap-2">
           <div class="flex items-start gap-2">
-            <AlertCircle class="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <AlertCircle class="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
             <span>{{ errorMessage }}</span>
           </div>
-          <button v-if="showSwitchToLoginPrompt" @click="switchTab('login')" class="text-[11px] font-mono underline text-blue-400 hover:text-blue-300 shrink-0">
-            Sign In Now
+          <button v-if="showSwitchToLoginPrompt" @click="switchTab('login')" class="text-[11px] font-mono underline text-[#059669] hover:underline shrink-0 font-bold">
+            Entrar Agora
           </button>
         </div>
 
         <!-- Login Form -->
         <form v-if="activeTab === 'login'" @submit.prevent="handleLogin" class="space-y-4 text-xs">
           <div>
-            <label class="block font-medium text-zinc-400 mb-1.5">Email address</label>
+            <label class="block font-semibold text-slate-700 mb-1.5">E-mail</label>
             <input
               v-model="loginEmail"
               type="email"
               required
-              placeholder="user@example.com"
-              :class="['w-full bg-[#18181b] border rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none transition', fieldErrors.email ? 'border-red-500' : 'border-zinc-800 focus:border-[#1d4ed8]']"
+              placeholder="seu@email.com"
+              :class="['w-full bg-slate-50 border rounded-lg p-2.5 text-slate-900 placeholder-slate-400 outline-none transition', fieldErrors.email ? 'border-rose-500' : 'border-slate-200 focus:border-[#059669]']"
             />
-            <span v-if="fieldErrors.email" class="text-red-400 text-[11px] mt-1 block font-mono">{{ fieldErrors.email }}</span>
+            <span v-if="fieldErrors.email" class="text-rose-600 text-[11px] mt-1 block font-mono">{{ fieldErrors.email }}</span>
           </div>
 
           <div>
-            <label class="block font-medium text-zinc-400 mb-1.5">Password</label>
+            <label class="block font-semibold text-slate-700 mb-1.5">Senha</label>
             <input
               v-model="loginPassword"
               type="password"
               required
               placeholder="••••••••"
-              :class="['w-full bg-[#18181b] border rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none transition', fieldErrors.password ? 'border-red-500' : 'border-zinc-800 focus:border-[#1d4ed8]']"
+              :class="['w-full bg-slate-50 border rounded-lg p-2.5 text-slate-900 placeholder-slate-400 outline-none transition', fieldErrors.password ? 'border-rose-500' : 'border-slate-200 focus:border-[#059669]']"
             />
-            <span v-if="fieldErrors.password" class="text-red-400 text-[11px] mt-1 block font-mono">{{ fieldErrors.password }}</span>
+            <span v-if="fieldErrors.password" class="text-rose-600 text-[11px] mt-1 block font-mono">{{ fieldErrors.password }}</span>
           </div>
 
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full py-2.5 rounded font-medium japanese-blue-btn flex items-center justify-center gap-2 disabled:opacity-50 mt-2 text-xs"
+            class="w-full py-3 rounded-lg font-bold bg-[#059669] hover:bg-[#047857] text-white flex items-center justify-center gap-2 disabled:opacity-50 mt-2 text-xs shadow-xs transition"
           >
             <Loader2 v-if="isLoading" class="w-4 h-4 animate-spin" />
-            <span v-else>Sign In</span>
+            <span v-else>Entrar na Conta</span>
           </button>
         </form>
 
         <!-- Register Form -->
         <form v-else @submit.prevent="handleRegister" class="space-y-4 text-xs">
           <div>
-            <label class="block font-medium text-zinc-400 mb-1.5">Full name</label>
+            <label class="block font-semibold text-slate-700 mb-1.5">Nome Completo</label>
             <input
               v-model="regName"
               type="text"
               required
               placeholder="Marco Lima"
-              :class="['w-full bg-[#18181b] border rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none transition', fieldErrors.name ? 'border-red-500' : 'border-zinc-800 focus:border-[#1d4ed8]']"
+              :class="['w-full bg-slate-50 border rounded-lg p-2.5 text-slate-900 placeholder-slate-400 outline-none transition', fieldErrors.name ? 'border-rose-500' : 'border-slate-200 focus:border-[#059669]']"
             />
-            <span v-if="fieldErrors.name" class="text-red-400 text-[11px] mt-1 block font-mono">{{ fieldErrors.name }}</span>
+            <span v-if="fieldErrors.name" class="text-rose-600 text-[11px] mt-1 block font-mono">{{ fieldErrors.name }}</span>
           </div>
 
           <div>
-            <label class="block font-medium text-zinc-400 mb-1.5">Email address</label>
+            <label class="block font-semibold text-slate-700 mb-1.5">E-mail</label>
             <input
               v-model="regEmail"
               type="email"
               required
-              placeholder="user@example.com"
-              :class="['w-full bg-[#18181b] border rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none transition', fieldErrors.email ? 'border-red-500' : 'border-zinc-800 focus:border-[#1d4ed8]']"
+              placeholder="seu@email.com"
+              :class="['w-full bg-slate-50 border rounded-lg p-2.5 text-slate-900 placeholder-slate-400 outline-none transition', fieldErrors.email ? 'border-rose-500' : 'border-slate-200 focus:border-[#059669]']"
             />
-            <span v-if="fieldErrors.email" class="text-red-400 text-[11px] mt-1 block font-mono">{{ fieldErrors.email }}</span>
+            <span v-if="fieldErrors.email" class="text-rose-600 text-[11px] mt-1 block font-mono">{{ fieldErrors.email }}</span>
           </div>
 
           <div>
             <div class="flex justify-between items-center mb-1.5">
-              <label class="font-medium text-zinc-400">Password</label>
-              <span class="text-zinc-500 text-[10px] font-mono">6 to 12 chars</span>
+              <label class="font-semibold text-slate-700">Senha</label>
+              <span class="text-slate-400 text-[10px] font-mono">6 a 12 caracteres</span>
             </div>
             <input
               v-model="regPassword"
@@ -127,18 +127,18 @@
               required
               maxlength="12"
               placeholder="••••••••"
-              :class="['w-full bg-[#18181b] border rounded p-2.5 text-zinc-100 placeholder-zinc-600 outline-none transition', fieldErrors.password ? 'border-red-500' : 'border-zinc-800 focus:border-[#1d4ed8]']"
+              :class="['w-full bg-slate-50 border rounded-lg p-2.5 text-slate-900 placeholder-slate-400 outline-none transition', fieldErrors.password ? 'border-rose-500' : 'border-slate-200 focus:border-[#059669]']"
             />
-            <span v-if="fieldErrors.password" class="text-red-400 text-[11px] mt-1 block font-mono">{{ fieldErrors.password }}</span>
+            <span v-if="fieldErrors.password" class="text-rose-600 text-[11px] mt-1 block font-mono">{{ fieldErrors.password }}</span>
           </div>
 
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full py-2.5 rounded font-medium japanese-blue-btn flex items-center justify-center gap-2 disabled:opacity-50 mt-2 text-xs"
+            class="w-full py-3 rounded-lg font-bold bg-[#059669] hover:bg-[#047857] text-white flex items-center justify-center gap-2 disabled:opacity-50 mt-2 text-xs shadow-xs transition"
           >
             <Loader2 v-if="isLoading" class="w-4 h-4 animate-spin" />
-            <span v-else>Create Account</span>
+            <span v-else>Criar Minha Conta</span>
           </button>
         </form>
       </div>
@@ -199,7 +199,7 @@ async function handleLogin() {
     await authStore.login(loginEmail.value, loginPassword.value);
     router.push('/dashboard');
   } catch (err: any) {
-    errorMessage.value = err.response?.data?.message || 'Invalid email or password.';
+    errorMessage.value = err.response?.data?.message || 'E-mail ou senha inválidos.';
   } finally {
     isLoading.value = false;
   }
@@ -208,15 +208,14 @@ async function handleLogin() {
 async function handleRegister() {
   clearErrors();
 
-  // Client-side length checks for immediate feedback
   if (regName.value.length < 2) {
-    fieldErrors.name = 'Full name must be at least 2 characters.';
-    errorMessage.value = 'Name field is too short.';
+    fieldErrors.name = 'O nome completo deve ter pelo menos 2 caracteres.';
+    errorMessage.value = 'Nome completo muito curto.';
     return;
   }
   if (regPassword.value.length < 6 || regPassword.value.length > 12) {
-    fieldErrors.password = 'Password must be between 6 and 12 characters.';
-    errorMessage.value = 'Password length must be between 6 and 12 characters.';
+    fieldErrors.password = 'A senha deve ter entre 6 e 12 caracteres.';
+    errorMessage.value = 'Tamanho da senha deve ter entre 6 e 12 caracteres.';
     return;
   }
 
@@ -229,17 +228,17 @@ async function handleRegister() {
     const data = err.response?.data;
     
     if (data?.message?.includes('already exists')) {
-      errorMessage.value = `An account for ${regEmail.value} already exists in database.`;
-      fieldErrors.email = 'Email already registered.';
+      errorMessage.value = `O e-mail ${regEmail.value} já possui cadastro.`;
+      fieldErrors.email = 'E-mail já cadastrado.';
       showSwitchToLoginPrompt.value = true;
     } else {
       const parsedMsg = parseApiErrors(data);
       if (parsedMsg) {
         errorMessage.value = parsedMsg;
       } else if (err.message) {
-        errorMessage.value = `API Error: ${err.message}`;
+        errorMessage.value = `Erro da API: ${err.message}`;
       } else {
-        errorMessage.value = 'Registration request failed. Please check server logs.';
+        errorMessage.value = 'Falha no cadastro. Verifique a conexão com o servidor.';
       }
     }
   } finally {
