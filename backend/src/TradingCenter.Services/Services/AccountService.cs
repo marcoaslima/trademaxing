@@ -10,6 +10,8 @@ public interface IAccountService
     Task<IReadOnlyList<AccountDto>> GetUserAccountsAsync(CancellationToken ct = default);
     Task<AccountDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<AccountDto> CreateAccountAsync(CreateAccountDto dto, CancellationToken ct = default);
+    Task<AccountDto?> UpdateAccountAsync(Guid id, CreateAccountDto dto, CancellationToken ct = default);
+    Task<bool> DeleteAccountAsync(Guid id, CancellationToken ct = default);
 }
 
 public class AccountService : IAccountService
@@ -49,5 +51,33 @@ public class AccountService : IAccountService
         await _unitOfWork.SaveChangesAsync(ct);
 
         return _mapper.Map<AccountDto>(account);
+    }
+
+    public async Task<AccountDto?> UpdateAccountAsync(Guid id, CreateAccountDto dto, CancellationToken ct = default)
+    {
+        var repository = _unitOfWork.Repository<Account>();
+        var account = await repository.GetByIdAsync(id, ct);
+        if (account == null) return null;
+
+        account.Name = dto.Name;
+        account.Institution = dto.Institution;
+        account.AccountType = dto.AccountType;
+        account.BaseCurrency = dto.BaseCurrency;
+
+        repository.Update(account);
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        return _mapper.Map<AccountDto>(account);
+    }
+
+    public async Task<bool> DeleteAccountAsync(Guid id, CancellationToken ct = default)
+    {
+        var repository = _unitOfWork.Repository<Account>();
+        var account = await repository.GetByIdAsync(id, ct);
+        if (account == null) return false;
+
+        repository.Remove(account);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return true;
     }
 }

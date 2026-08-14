@@ -11,6 +11,8 @@ public interface IInvestmentService
     Task<InvestmentDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<InvestmentDto> CreateInvestmentAsync(CreateInvestmentDto dto, CancellationToken ct = default);
     Task<CreateAssetDto> CreateAssetAsync(CreateAssetDto dto, CancellationToken ct = default);
+    Task<Asset?> UpdateAssetAsync(Guid id, CreateAssetDto dto, CancellationToken ct = default);
+    Task<bool> DeleteAssetAsync(Guid id, CancellationToken ct = default);
 }
 
 public class InvestmentService : IInvestmentService
@@ -76,5 +78,36 @@ public class InvestmentService : IInvestmentService
         await _unitOfWork.SaveChangesAsync(ct);
 
         return _mapper.Map<CreateAssetDto>(asset);
+    }
+
+    public async Task<Asset?> UpdateAssetAsync(Guid id, CreateAssetDto dto, CancellationToken ct = default)
+    {
+        var repository = _unitOfWork.Repository<Asset>();
+        var asset = await repository.GetByIdAsync(id, ct);
+        if (asset == null) return null;
+
+        asset.Name = dto.Name;
+        asset.Ticker = string.IsNullOrWhiteSpace(dto.Ticker) ? null : dto.Ticker.ToUpperInvariant();
+        asset.AssetCategory = dto.AssetCategory;
+        asset.ValuationType = dto.ValuationType;
+        asset.Currency = dto.Currency;
+        asset.IndexBenchmark = dto.IndexBenchmark;
+        asset.LogoUrl = dto.LogoUrl;
+
+        repository.Update(asset);
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        return asset;
+    }
+
+    public async Task<bool> DeleteAssetAsync(Guid id, CancellationToken ct = default)
+    {
+        var repository = _unitOfWork.Repository<Asset>();
+        var asset = await repository.GetByIdAsync(id, ct);
+        if (asset == null) return false;
+
+        repository.Remove(asset);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return true;
     }
 }

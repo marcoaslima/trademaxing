@@ -28,5 +28,17 @@ public static class AccountEndpoints
             var created = await accountService.CreateAccountAsync(dto, ct);
             return Results.Created($"/api/v1/accounts/{created.Id}", created);
         });
+
+        group.MapPut("/{id:guid}", async (Guid id, CreateAccountDto dto, IAccountService accountService, CancellationToken ct) =>
+        {
+            var updated = await accountService.UpdateAccountAsync(id, dto, ct);
+            return updated != null ? Results.Ok(updated) : Results.NotFound();
+        });
+
+        group.MapDelete("/{id:guid}", async (Guid id, IAccountService accountService, CancellationToken ct) =>
+        {
+            var deleted = await accountService.DeleteAccountAsync(id, ct);
+            return deleted ? Results.NoContent() : Results.NotFound();
+        });
     }
 }

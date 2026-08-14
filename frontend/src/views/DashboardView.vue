@@ -3,11 +3,18 @@
     <!-- Navbar -->
     <header class="border-b border-zinc-800 bg-[#09090b] sticky top-0 z-40">
       <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-7 h-7 rounded bg-[#1d4ed8] flex items-center justify-center font-bold text-white text-xs">
-            TC
-          </div>
-          <span class="text-sm font-semibold tracking-tight text-white">TradingCenter</span>
+        <div class="flex items-center gap-6">
+          <router-link to="/dashboard" class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded bg-[#1d4ed8] flex items-center justify-center font-bold text-white text-xs">
+              TC
+            </div>
+            <span class="text-sm font-semibold tracking-tight text-white">TradingCenter</span>
+          </router-link>
+
+          <nav class="flex items-center gap-4 text-xs font-medium">
+            <router-link to="/dashboard" class="text-white border-b-2 border-blue-600 pb-0.5">Dashboard</router-link>
+            <router-link to="/manage" class="text-zinc-400 hover:text-zinc-200 transition">Manage Assets & Accounts</router-link>
+          </nav>
         </div>
 
         <div class="flex items-center gap-4 text-xs">

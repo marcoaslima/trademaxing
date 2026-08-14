@@ -76,6 +76,28 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     return response.data;
   }
 
+  async function updateAccount(id: string, data: any) {
+    const response = await apiClient.put<Account>(`/accounts/${id}`, data);
+    await fetchAccounts();
+    return response.data;
+  }
+
+  async function deleteAccount(id: string) {
+    await apiClient.delete(`/accounts/${id}`);
+    await fetchAccounts();
+  }
+
+  async function updateAsset(id: string, data: any) {
+    const response = await apiClient.put<Asset>(`/assets/${id}`, data);
+    await fetchAssets();
+    return response.data;
+  }
+
+  async function deleteAsset(id: string) {
+    await apiClient.delete(`/assets/${id}`);
+    await fetchAssets();
+  }
+
   return {
     summary,
     snapshots,
@@ -88,8 +110,12 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     fetchPortfolioHistory,
     fetchAccounts,
     createAccount,
+    updateAccount,
+    deleteAccount,
     fetchAssets,
     createAsset,
+    updateAsset,
+    deleteAsset,
     createInvestment,
     createTransaction,
   };

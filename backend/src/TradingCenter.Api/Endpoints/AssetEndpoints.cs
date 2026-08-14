@@ -32,5 +32,19 @@ public static class AssetEndpoints
                 return Results.BadRequest(new { message = ex.Message });
             }
         }).RequireAuthorization();
+
+        // Update Master Asset
+        group.MapPut("/{id:guid}", async (Guid id, CreateAssetDto dto, IInvestmentService investmentService, CancellationToken ct) =>
+        {
+            var updated = await investmentService.UpdateAssetAsync(id, dto, ct);
+            return updated != null ? Results.Ok(updated) : Results.NotFound();
+        }).RequireAuthorization();
+
+        // Delete Master Asset
+        group.MapDelete("/{id:guid}", async (Guid id, IInvestmentService investmentService, CancellationToken ct) =>
+        {
+            var deleted = await investmentService.DeleteAssetAsync(id, ct);
+            return deleted ? Results.NoContent() : Results.NotFound();
+        }).RequireAuthorization();
     }
 }
