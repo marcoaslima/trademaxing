@@ -15,7 +15,10 @@ public record PositionSummaryDto(
     decimal UnrealizedGainLossPercentage,
     string Currency,
     string? LogoUrl
-);
+)
+{
+    public PositionSummaryDto() : this(Guid.Empty, string.Empty, null, string.Empty, string.Empty, 0, 0, 0, 0, 0, 0, 0, string.Empty, null) { }
+}
 
 public record PortfolioSummaryDto(
     decimal TotalNetWorthBrl,
@@ -26,7 +29,10 @@ public record PortfolioSummaryDto(
     decimal TotalGainLossUsd,
     decimal ExchangeRateUsdBrl,
     IReadOnlyList<PositionSummaryDto> Positions
-);
+)
+{
+    public PortfolioSummaryDto() : this(0, 0, 0, 0, 0, 0, 0, new List<PositionSummaryDto>()) { }
+}
 
 public record PortfolioSnapshotDto(
     DateTime Date,
@@ -36,4 +42,7 @@ public record PortfolioSnapshotDto(
     decimal TotalInvestedUsd,
     decimal NetGainLossBrl,
     decimal NetGainLossUsd
-);
+)
+{
+    public PortfolioSnapshotDto() : this(default, 0, 0, 0, 0, 0, 0) { }
+}

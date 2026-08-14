@@ -17,7 +17,10 @@ public record InvestmentDto(
     DateTime? MaturityDate,
     string? LogoUrl,
     DateTime CreatedAt
-);
+)
+{
+    public InvestmentDto() : this(Guid.Empty, Guid.Empty, Guid.Empty, string.Empty, null, null, default, default, default, default, null, null, null, default) { }
+}
 
 public record CreateInvestmentDto(
     Guid AccountId,
@@ -25,7 +28,10 @@ public record CreateInvestmentDto(
     string? CustomName,
     decimal? InterestRate,
     DateTime? MaturityDate
-);
+)
+{
+    public CreateInvestmentDto() : this(Guid.Empty, Guid.Empty, null, null, null) { }
+}
 
 public record CreateAssetDto(
     string Name,
@@ -35,4 +41,7 @@ public record CreateAssetDto(
     Currency Currency,
     IndexBenchmark IndexBenchmark,
     string? LogoUrl
-);
+)
+{
+    public CreateAssetDto() : this(string.Empty, null, default, default, default, default, null) { }
+}

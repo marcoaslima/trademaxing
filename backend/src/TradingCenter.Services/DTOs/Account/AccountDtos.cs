@@ -10,11 +10,17 @@ public record AccountDto(
     AccountType AccountType,
     Currency BaseCurrency,
     DateTime CreatedAt
-);
+)
+{
+    public AccountDto() : this(Guid.Empty, Guid.Empty, string.Empty, string.Empty, default, default, default) { }
+}
 
 public record CreateAccountDto(
     string Name,
     string Institution,
     AccountType AccountType,
     Currency BaseCurrency
-);
+)
+{
+    public CreateAccountDto() : this(string.Empty, string.Empty, default, default) { }
+}

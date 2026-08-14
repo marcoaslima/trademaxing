@@ -16,7 +16,10 @@ public record TransactionDto(
     Currency Currency,
     string? Notes,
     DateTime CreatedAt
-);
+)
+{
+    public TransactionDto() : this(Guid.Empty, Guid.Empty, Guid.Empty, default, default, 0, 0, 0, 0, 0, default, null, default) { }
+}
 
 public record CreateTransactionDto(
     Guid InvestmentId,
@@ -30,4 +33,7 @@ public record CreateTransactionDto(
     decimal TaxAmount,
     Currency Currency,
     string? Notes
-);
+)
+{
+    public CreateTransactionDto() : this(Guid.Empty, Guid.Empty, default, default, 0, 0, 0, 0, 0, default, null) { }
+}
