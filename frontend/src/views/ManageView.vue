@@ -357,9 +357,14 @@ function handleLogout() {
   router.push('/login');
 }
 
-function getLogoUrl(logo: string) {
-  if (logo.startsWith('http')) return logo;
-  return `http://localhost:8081${logo.startsWith('/') ? '' : '/'}${logo}`;
+function getLogoUrl(logo?: string) {
+  if (!logo) return '';
+  if (logo.startsWith('http://') || logo.startsWith('https://')) return logo;
+  const assetsBase = import.meta.env.VITE_ASSETS_BASE_URL || '';
+  if (assetsBase) {
+    return `${assetsBase}${logo.startsWith('/') ? '' : '/'}${logo}`;
+  }
+  return logo.startsWith('/') ? logo : `/${logo}`;
 }
 
 // Account actions

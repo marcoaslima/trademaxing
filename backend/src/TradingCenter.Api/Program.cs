@@ -9,8 +9,13 @@ using TradingCenter.Api.Services;
 using TradingCenter.Domain.Interfaces;
 using TradingCenter.Repository;
 using TradingCenter.Services;
+using TradingCenter.Api.Converters;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+var cultureInfo = new System.Globalization.CultureInfo("pt-BR");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,12 +26,14 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true));
+    options.SerializerOptions.Converters.Add(new DateTimePtBrJsonConverter());
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true));
+    options.JsonSerializerOptions.Converters.Add(new DateTimePtBrJsonConverter());
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 });
 

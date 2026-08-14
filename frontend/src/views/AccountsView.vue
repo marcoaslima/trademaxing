@@ -95,7 +95,7 @@
                 </span>
               </td>
               <td class="py-3.5 px-4 font-semibold text-[#059669]">{{ acc.baseCurrency }}</td>
-              <td class="py-3.5 px-4 text-slate-400 text-[11px]">{{ new Date(acc.createdAt).toLocaleDateString() }}</td>
+              <td class="py-3.5 px-4 text-slate-400 text-[11px]">{{ formatDateBR(acc.createdAt) }}</td>
               <td class="py-3.5 px-4 text-right">
                 <div class="flex items-center justify-end gap-2 font-sans">
                   <button @click="openEditAccountModal(acc)" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition">
@@ -161,6 +161,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
+import { formatDateBR } from '@/utils/formatters';
 import { Plus, LogOut } from '@lucide/vue';
 import type { Account } from '@/types';
 

@@ -614,7 +614,7 @@
                   </td>
                 </tr>
                 <tr v-for="tx in positionTransactions" :key="tx.id" class="hover:bg-slate-50">
-                  <td class="py-2.5 px-3 font-sans text-slate-700">{{ new Date(tx.transactionDate).toLocaleDateString() }}</td>
+                  <td class="py-2.5 px-3 font-sans text-slate-700">{{ formatDateBR(tx.transactionDate) }}</td>
                   <td class="py-2.5 px-3 font-sans">
                     <span :class="[tx.transactionType === 'Buy' || tx.transactionType === 'Deposit' ? 'bg-emerald-50 text-[#059669] border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200']" class="px-2 py-0.5 rounded border text-[10px] font-bold">
                       {{ tx.transactionType === 'Buy' ? 'Compra' : tx.transactionType === 'Sell' ? 'Venda' : tx.transactionType }}
@@ -691,6 +691,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
+import { formatDateBR } from '@/utils/formatters';
 import { Search, Plus, Wallet, Layers, LogOut, TrendingUp, PieChart, ChevronDown, Briefcase, RefreshCw, History, Edit3, Trash2 } from '@lucide/vue';
 import type { PositionSummary, Transaction } from '@/types';
 
@@ -876,9 +877,14 @@ function formatCurrency(val: number, currency?: string) {
   }).format(val);
 }
 
-function getLogoUrl(logo: string) {
-  if (logo.startsWith('http')) return logo;
-  return `http://localhost:8081${logo.startsWith('/') ? '' : '/'}${logo}`;
+function getLogoUrl(logo?: string) {
+  if (!logo) return '';
+  if (logo.startsWith('http://') || logo.startsWith('https://')) return logo;
+  const assetsBase = import.meta.env.VITE_ASSETS_BASE_URL || '';
+  if (assetsBase) {
+    return `${assetsBase}${logo.startsWith('/') ? '' : '/'}${logo}`;
+  }
+  return logo.startsWith('/') ? logo : `/${logo}`;
 }
 
 async function openAddInvestmentModal() {
