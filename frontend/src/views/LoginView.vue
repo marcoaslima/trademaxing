@@ -225,32 +225,58 @@ async function handleRegister() {
     await authStore.register(regName.value, regEmail.value, regPassword.value);
     router.push('/dashboard');
   } catch (err: any) {
+    console.error('Registration error payload:', err.response?.data);
     const data = err.response?.data;
     
     if (data?.message?.includes('already exists')) {
       errorMessage.value = `An account for ${regEmail.value} already exists in database.`;
       fieldErrors.email = 'Email already registered.';
       showSwitchToLoginPrompt.value = true;
-    } else if (data?.errors) {
-      if (data.errors.Email || data.errors.email) {
-        fieldErrors.email = (data.errors.Email || data.errors.email)[0];
-      }
-      if (data.errors.Password || data.errors.password) {
-        fieldErrors.password = (data.errors.Password || data.errors.password)[0];
-      }
-      if (data.errors.Name || data.errors.name) {
-        fieldErrors.name = (data.errors.Name || data.errors.name)[0];
-      }
-      errorMessage.value = fieldErrors.password || fieldErrors.email || fieldErrors.name || 'Submitted inputs failed validation.';
-    } else if (data?.title || data?.message) {
-      errorMessage.value = data.message || data.title;
-    } else if (err.message) {
-      errorMessage.value = `API Connection Error: ${err.message}. Check backend API status at /api/v1/auth/register.`;
     } else {
-      errorMessage.value = 'Unable to reach API server. Check network connection.';
+      const parsedMsg = parseApiErrors(data);
+      if (parsedMsg) {
+        errorMessage.value = parsedMsg;
+      } else if (err.message) {
+        errorMessage.value = `API Error: ${err.message}`;
+      } else {
+        errorMessage.value = 'Registration request failed. Please check server logs.';
+      }
     }
   } finally {
     isLoading.value = false;
   }
+}
+
+function parseApiErrors(data: any): string {
+  if (!data) return '';
+
+  if (data.errors && typeof data.errors === 'object') {
+    const list: string[] = [];
+    for (const [rawKey, val] of Object.entries(data.errors)) {
+      const key = rawKey.replace(/^dto\./i, '');
+      const errs = Array.isArray(val) ? val : [val];
+      const msg = errs[0];
+      if (!msg) continue;
+
+      const lower = key.toLowerCase();
+      if (lower.includes('email')) {
+        fieldErrors.email = msg;
+      } else if (lower.includes('password')) {
+        fieldErrors.password = msg;
+      } else if (lower.includes('name')) {
+        fieldErrors.name = msg;
+      }
+
+      list.push(`${key}: ${msg}`);
+    }
+    if (list.length > 0) {
+      return list.join(' | ');
+    }
+  }
+
+  if (data.message) return data.message;
+  if (data.detail) return data.detail;
+  if (data.title && data.title !== 'One or more validation errors occurred.') return data.title;
+  return '';
 }
 </script>
