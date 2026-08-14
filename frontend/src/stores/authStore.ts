@@ -3,10 +3,19 @@ import { ref, computed } from 'vue';
 import apiClient from '@/api/client';
 import type { User } from '@/types';
 
-export const useAuthStore = defineStore('auth', () => {
-  const savedUser = localStorage.getItem('user_data');
-  const user = ref<User | null>(savedUser ? JSON.parse(savedUser) : null);
+function safeParseUser(raw: string | null): User | null {
+  if (!raw || raw === 'undefined' || raw === 'null') return null;
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn('Failed to parse user_data from localStorage:', e);
+    localStorage.removeItem('user_data');
+    return null;
+  }
+}
 
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref<User | null>(safeParseUser(localStorage.getItem('user_data')));
   const token = ref<string | null>(localStorage.getItem('jwt_token'));
   const isAuthenticated = computed(() => !!token.value);
 
