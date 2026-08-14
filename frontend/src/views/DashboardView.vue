@@ -122,7 +122,7 @@
           </div>
 
           <button
-            @click="showAddInvestmentModal = true"
+            @click="openAddInvestmentModal"
             class="w-full sm:w-auto px-4 py-1.5 rounded japanese-blue-btn font-medium text-xs"
           >
             + Add Holding
@@ -152,7 +152,7 @@
               <tbody class="divide-y divide-zinc-800/60 font-mono-numbers">
                 <tr v-if="positions.length === 0">
                   <td colspan="7" class="py-12 text-center text-zinc-500 font-sans">
-                    No active positions found.
+                    No active positions found. Click "+ Add Holding" above to add investments.
                   </td>
                 </tr>
 
@@ -206,14 +206,17 @@
       </template>
     </main>
 
-    <!-- Modal: Add Account -->
+    <!-- Modal 1: Add Broker Account -->
     <div v-if="showAddAccountModal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
       <div class="sober-panel w-full max-w-sm p-5 rounded-lg space-y-4 text-xs">
-        <h3 class="font-semibold text-white">Add Broker Account</h3>
+        <div class="flex justify-between items-center">
+          <h3 class="font-semibold text-white">Add Broker Account</h3>
+          <button @click="showAddAccountModal = false" class="text-zinc-500 hover:text-white">✕</button>
+        </div>
         <form @submit.prevent="submitAddAccount" class="space-y-3">
           <div>
             <label class="block text-zinc-400 mb-1">Account Name</label>
-            <input v-model="newAccount.name" type="text" required placeholder="Interactive Brokers US" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none focus:border-blue-500" />
+            <input v-model="newAccount.name" type="text" required placeholder="XP Brokerage US" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none focus:border-blue-500" />
           </div>
           <div>
             <label class="block text-zinc-400 mb-1">Institution</label>
@@ -226,6 +229,7 @@
                 <option value="Brokerage">Brokerage</option>
                 <option value="Personal">Personal</option>
                 <option value="Retirement_FGTS">Retirement FGTS</option>
+                <option value="Joint">Joint</option>
               </select>
             </div>
             <div>
@@ -239,6 +243,141 @@
           <div class="flex justify-end gap-2 pt-2">
             <button type="button" @click="showAddAccountModal = false" class="px-3 py-1.5 rounded bg-zinc-800 text-zinc-300">Cancel</button>
             <button type="submit" class="px-4 py-1.5 rounded japanese-blue-btn">Save Account</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 2: Add Master Asset -->
+    <div v-if="showAddAssetModal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+      <div class="sober-panel w-full max-w-md p-5 rounded-lg space-y-4 text-xs">
+        <div class="flex justify-between items-center">
+          <h3 class="font-semibold text-white">Add Master Asset Catalog Item</h3>
+          <button @click="showAddAssetModal = false" class="text-zinc-500 hover:text-white">✕</button>
+        </div>
+        <form @submit.prevent="submitAddAsset" class="space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-zinc-400 mb-1">Asset Name</label>
+              <input v-model="newAsset.name" type="text" required placeholder="Apple Inc" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none focus:border-blue-500" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1">Ticker (Optional)</label>
+              <input v-model="newAsset.ticker" type="text" placeholder="AAPL / PETR4" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none focus:border-blue-500 uppercase" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-zinc-400 mb-1">Category</label>
+              <select v-model="newAsset.assetCategory" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none">
+                <option value="Stock_BR">Stock (BR)</option>
+                <option value="Stock_US">Stock (US)</option>
+                <option value="Etf_BR">ETF (BR)</option>
+                <option value="Etf_US">ETF (US)</option>
+                <option value="FixedIncome_BR">Fixed Income (BR)</option>
+                <option value="Crypto">Crypto</option>
+                <option value="REIT_BR">FII (BR)</option>
+                <option value="REIT_US">REIT (US)</option>
+                <option value="FGTS">FGTS</option>
+                <option value="Cash">Cash</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1">Valuation Type</label>
+              <select v-model="newAsset.valuationType" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none">
+                <option value="TickerMarket">Ticker Market</option>
+                <option value="IndexLinked">Index Linked</option>
+                <option value="ManualFixedValue">Manual Fixed Value</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-zinc-400 mb-1">Currency</label>
+              <select v-model="newAsset.currency" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none">
+                <option value="BRL">BRL</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1">Index Benchmark</label>
+              <select v-model="newAsset.indexBenchmark" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none">
+                <option value="None">None</option>
+                <option value="CDI">CDI</option>
+                <option value="IPCA">IPCA</option>
+                <option value="SELIC">SELIC</option>
+                <option value="IGPM">IGPM</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-zinc-400 mb-1">Logo URL (Optional)</label>
+            <input v-model="newAsset.logoUrl" type="text" placeholder="/logos/aapl.png or https://..." class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none" />
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" @click="showAddAssetModal = false" class="px-3 py-1.5 rounded bg-zinc-800 text-zinc-300">Cancel</button>
+            <button type="submit" class="px-4 py-1.5 rounded japanese-blue-btn">Save Asset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 3: Add Holding / Investment -->
+    <div v-if="showAddInvestmentModal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+      <div class="sober-panel w-full max-w-md p-5 rounded-lg space-y-4 text-xs">
+        <div class="flex justify-between items-center">
+          <h3 class="font-semibold text-white">Add Holding Position</h3>
+          <button @click="showAddInvestmentModal = false" class="text-zinc-500 hover:text-white">✕</button>
+        </div>
+        <form @submit.prevent="submitAddInvestment" class="space-y-3">
+          <div>
+            <label class="block text-zinc-400 mb-1">Broker Account</label>
+            <select v-model="newHolding.accountId" required class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none">
+              <option value="" disabled>-- Select Broker Account --</option>
+              <option v-for="acc in portfolioStore.accounts" :key="acc.id" :value="acc.id">
+                {{ acc.name }} ({{ acc.institution }} - {{ acc.baseCurrency }})
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-zinc-400 mb-1">Master Asset</label>
+            <select v-model="newHolding.assetId" required class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none">
+              <option value="" disabled>-- Select Master Asset --</option>
+              <option v-for="ast in portfolioStore.assets" :key="ast.id" :value="ast.id">
+                {{ ast.name }} {{ ast.ticker ? `(${ast.ticker})` : '' }} - {{ ast.assetCategory }} ({{ ast.currency }})
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-zinc-400 mb-1">Custom Label / Note (Optional)</label>
+            <input v-model="newHolding.customName" type="text" placeholder="e.g. My Long Term Holding" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-zinc-400 mb-1">Quantity</label>
+              <input v-model.number="newHolding.quantity" type="number" step="any" min="0.00000001" required placeholder="10" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none focus:border-blue-500" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 mb-1">Purchase Price per Unit</label>
+              <input v-model.number="newHolding.pricePerUnit" type="number" step="any" min="0.01" required placeholder="150.00" class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none focus:border-blue-500" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-zinc-400 mb-1">Purchase Date</label>
+            <input v-model="newHolding.transactionDate" type="date" required class="w-full bg-[#18181b] border border-zinc-800 rounded p-2 text-white outline-none" />
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" @click="showAddInvestmentModal = false" class="px-3 py-1.5 rounded bg-zinc-800 text-zinc-300">Cancel</button>
+            <button type="submit" class="px-4 py-1.5 rounded japanese-blue-btn">Save Holding</button>
           </div>
         </form>
       </div>
@@ -267,6 +406,25 @@ const newAccount = ref({
   institution: '',
   accountType: 'Brokerage',
   baseCurrency: 'BRL',
+});
+
+const newAsset = ref({
+  name: '',
+  ticker: '',
+  assetCategory: 'Stock_BR',
+  valuationType: 'TickerMarket',
+  currency: 'BRL',
+  indexBenchmark: 'None',
+  logoUrl: '',
+});
+
+const newHolding = ref({
+  accountId: '',
+  assetId: '',
+  customName: '',
+  quantity: 1,
+  pricePerUnit: 100,
+  transactionDate: new Date().toISOString().substring(0, 10),
 });
 
 const summary = computed(() => portfolioStore.summary);
@@ -311,9 +469,75 @@ function getLogoUrl(logo: string) {
   return `http://localhost:8081${logo.startsWith('/') ? '' : '/'}${logo}`;
 }
 
+async function openAddInvestmentModal() {
+  await Promise.all([portfolioStore.fetchAccounts(), portfolioStore.fetchAssets()]);
+  if (portfolioStore.accounts.length > 0) {
+    newHolding.value.accountId = portfolioStore.accounts[0].id;
+  }
+  if (portfolioStore.assets.length > 0) {
+    newHolding.value.assetId = portfolioStore.assets[0].id;
+  }
+  showAddInvestmentModal.value = true;
+}
+
 async function submitAddAccount() {
   await portfolioStore.createAccount(newAccount.value);
   showAddAccountModal.value = false;
   newAccount.value = { name: '', institution: '', accountType: 'Brokerage', baseCurrency: 'BRL' };
+  await portfolioStore.fetchAccounts();
+}
+
+async function submitAddAsset() {
+  const payload = {
+    name: newAsset.value.name,
+    ticker: newAsset.value.ticker ? newAsset.value.ticker.toUpperCase() : null,
+    assetCategory: newAsset.value.assetCategory,
+    valuationType: newAsset.value.valuationType,
+    currency: newAsset.value.currency,
+    indexBenchmark: newAsset.value.indexBenchmark,
+    logoUrl: newAsset.value.logoUrl || null,
+  };
+  await portfolioStore.createAsset(payload);
+  showAddAssetModal.value = false;
+  newAsset.value = {
+    name: '',
+    ticker: '',
+    assetCategory: 'Stock_BR',
+    valuationType: 'TickerMarket',
+    currency: 'BRL',
+    indexBenchmark: 'None',
+    logoUrl: '',
+  };
+  await portfolioStore.fetchAssets();
+}
+
+async function submitAddInvestment() {
+  if (!newHolding.value.accountId || !newHolding.value.assetId) return;
+
+  const inv = await portfolioStore.createInvestment({
+    accountId: newHolding.value.accountId,
+    assetId: newHolding.value.assetId,
+    customName: newHolding.value.customName || undefined,
+  });
+
+  const selectedAsset = portfolioStore.assets.find(a => a.id === newHolding.value.assetId);
+  const currency = selectedAsset?.currency || 'BRL';
+
+  await portfolioStore.createTransaction({
+    investmentId: inv.id,
+    accountId: newHolding.value.accountId,
+    transactionType: 'Buy',
+    transactionDate: new Date(newHolding.value.transactionDate).toISOString(),
+    quantity: newHolding.value.quantity,
+    pricePerUnit: newHolding.value.pricePerUnit,
+    totalAmount: newHolding.value.quantity * newHolding.value.pricePerUnit,
+    feeAmount: 0,
+    taxAmount: 0,
+    currency,
+    notes: 'Initial holding purchase',
+  });
+
+  showAddInvestmentModal.value = false;
+  await portfolioStore.fetchPortfolioSummary();
 }
 </script>

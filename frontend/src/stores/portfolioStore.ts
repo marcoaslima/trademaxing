@@ -70,6 +70,12 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     return response.data;
   }
 
+  async function createTransaction(data: any) {
+    const response = await apiClient.post('/transactions', data);
+    await fetchPortfolioSummary();
+    return response.data;
+  }
+
   return {
     summary,
     snapshots,
@@ -85,5 +91,6 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     fetchAssets,
     createAsset,
     createInvestment,
+    createTransaction,
   };
 });
