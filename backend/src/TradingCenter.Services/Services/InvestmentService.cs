@@ -7,6 +7,7 @@ namespace TradingCenter.Services.Services;
 
 public interface IInvestmentService
 {
+    Task<IReadOnlyList<Asset>> GetAssetsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<InvestmentDto>> GetInvestmentsAsync(Guid? accountId = null, CancellationToken ct = default);
     Task<InvestmentDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<InvestmentDto> CreateInvestmentAsync(CreateInvestmentDto dto, CancellationToken ct = default);
@@ -24,6 +25,11 @@ public class InvestmentService : IInvestmentService
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+    }
+
+    public async Task<IReadOnlyList<Asset>> GetAssetsAsync(CancellationToken ct = default)
+    {
+        return await _unitOfWork.Repository<Asset>().GetAllAsync(ct);
     }
 
     public async Task<IReadOnlyList<InvestmentDto>> GetInvestmentsAsync(Guid? accountId = null, CancellationToken ct = default)

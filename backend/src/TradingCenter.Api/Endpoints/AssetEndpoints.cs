@@ -12,10 +12,9 @@ public static class AssetEndpoints
                        .WithTags("Master Asset Catalog");
 
         // Public / Authenticated search list of Master Assets
-        group.MapGet("/", async (string? search, IInvestmentService investmentService, CancellationToken ct) =>
+        group.MapGet("/", async (IInvestmentService investmentService, CancellationToken ct) =>
         {
-            var assets = await investmentService.GetInvestmentsAsync(null, ct);
-            // Search filter if provided
+            var assets = await investmentService.GetAssetsAsync(ct);
             return Results.Ok(assets);
         });
 
