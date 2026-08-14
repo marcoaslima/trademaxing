@@ -8,5 +8,6 @@ public enum IndexBenchmark
     TR = 3,
     SELIC = 4,
     SP500 = 5,
-    IBOVESPA = 6
+    IBOVESPA = 6,
+    IGPM = 7
 }

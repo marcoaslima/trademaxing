@@ -39,6 +39,17 @@ public class PortfolioEngine : IPortfolioEngine
         var fxRates = await _unitOfWork.Repository<ExchangeRate>().GetAllAsync(ct);
         var latestFxRate = fxRates.OrderByDescending(r => r.RateDate).FirstOrDefault()?.Rate ?? 5.50m;
 
+        // Latest market prices for tickers
+        var marketPrices = await _unitOfWork.Repository<MarketPrice>().GetAllAsync(ct);
+        var latestPriceDict = marketPrices
+            .Where(m => !string.IsNullOrEmpty(m.Ticker))
+            .GroupBy(m => m.Ticker, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(m => m.PriceDate).First().ClosingPrice, StringComparer.OrdinalIgnoreCase);
+
+        // Latest economic indexes
+        var economicIndexes = await _unitOfWork.Repository<EconomicIndex>().GetAllAsync(ct);
+        var latestCdiRate = economicIndexes.Where(e => e.IndexCode == IndexBenchmark.CDI).OrderByDescending(e => e.IndexDate).FirstOrDefault()?.DailyRate ?? 0.0004m;
+
         var positions = new List<PositionSummaryDto>();
 
         decimal totalNetWorthBrl = 0;
@@ -77,7 +88,14 @@ public class PortfolioEngine : IPortfolioEngine
             if (totalQty <= 0) continue;
 
             decimal avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
-            decimal unitPrice = _valuationCalculator.CalculateCurrentUnitPrice(asset, inv.InterestRate, avgPrice, 0.0004m);
+            
+            decimal marketPrice = avgPrice;
+            if (!string.IsNullOrEmpty(asset.Ticker) && latestPriceDict.TryGetValue(asset.Ticker, out var syncedPrice) && syncedPrice > 0)
+            {
+                marketPrice = syncedPrice;
+            }
+
+            decimal unitPrice = _valuationCalculator.CalculateCurrentUnitPrice(asset, inv.InterestRate, marketPrice, latestCdiRate);
             decimal currentValue = totalQty * unitPrice;
             decimal pnl = currentValue - totalCost;
             decimal pnlPct = totalCost > 0 ? (pnl / totalCost) * 100m : 0;

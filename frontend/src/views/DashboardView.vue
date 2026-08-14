@@ -22,10 +22,26 @@
               class="w-full bg-slate-50 border border-slate-200 focus:border-[#059669] rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 outline-none transition"
             />
           </div>
+          <!-- Navigation Links -->
+          <nav class="hidden md:flex items-center gap-4 text-xs font-medium border-l border-slate-200 pl-4">
+            <router-link to="/dashboard" class="text-[#059669] font-bold border-b-2 border-[#059669] pb-0.5">Dashboard</router-link>
+            <router-link to="/accounts" class="text-slate-500 hover:text-slate-900 transition">Contas & Corretoras</router-link>
+            <router-link to="/assets" class="text-slate-500 hover:text-slate-900 transition">Catálogo de Ativos</router-link>
+          </nav>
         </div>
 
         <!-- Toolbar & User Actions -->
         <div class="flex items-center gap-2 shrink-0 text-xs">
+          <button
+            @click="handleSyncMarketData"
+            :disabled="portfolioStore.isSyncingPrices"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 transition font-medium text-xs shadow-xs"
+            title="Sincronizar cotações do Yahoo Finance e taxas do Banco Central"
+          >
+            <RefreshCw :class="['w-3.5 h-3.5 text-[#059669]', portfolioStore.isSyncingPrices ? 'animate-spin' : '']" />
+            <span>{{ portfolioStore.isSyncingPrices ? 'Sincronizando...' : 'Sincronizar Preços' }}</span>
+          </button>
+
           <button
             @click="openAddInvestmentModal"
             class="px-3.5 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium flex items-center gap-1.5 shadow-xs transition"
@@ -33,14 +49,6 @@
             <Plus class="w-3.5 h-3.5" />
             <span>+ Negociar</span>
           </button>
-
-          <router-link
-            to="/manage"
-            class="hidden lg:flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition font-medium text-xs"
-          >
-            <Layers class="w-3.5 h-3.5 text-slate-500" />
-            <span>Gerenciar Ativos</span>
-          </router-link>
 
           <!-- Currency Selector Toggle -->
           <div class="bg-slate-100 border border-slate-200 p-0.5 rounded-lg flex items-center">
@@ -104,7 +112,7 @@
               <div>
                 <span class="text-xs font-semibold text-slate-600 block mb-1">Disponível em Caixa</span>
                 <div class="text-2xl font-bold text-slate-900 font-mono-numbers">
-                  {{ formatCurrency(displayCurrency === 'BRL' ? 1250 : 227.27) }}
+                  {{ formatCurrency(availableCash) }}
                 </div>
               </div>
               <button @click="showAddAccountModal = true" class="px-3.5 py-1.5 rounded-full border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-xs transition">
@@ -243,7 +251,7 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100 font-mono-numbers">
-                    <tr v-for="pos in cat.items" :key="pos.investmentId" class="hover:bg-slate-50/80 transition group">
+                    <tr v-for="pos in cat.items" :key="pos.investmentId" @click="openPositionModal(pos)" class="hover:bg-slate-50 cursor-pointer transition group">
                       <!-- Ativo -->
                       <td class="py-3.5 px-3">
                         <div class="flex items-center gap-3">
@@ -252,7 +260,7 @@
                             <span v-else class="text-[10px] font-bold text-slate-600">{{ pos.name.substring(0, 1) }}</span>
                           </div>
                           <div>
-                            <span class="block font-bold text-slate-900 font-sans text-xs">{{ pos.ticker || pos.name }}</span>
+                            <span class="block font-bold text-slate-900 font-sans text-xs group-hover:text-[#059669] transition">{{ pos.ticker || pos.name }}</span>
                             <span class="text-[11px] text-slate-500 font-sans block truncate max-w-[150px]">{{ pos.name }}</span>
                           </div>
                         </div>
@@ -261,7 +269,7 @@
                       <!-- Cotação -->
                       <td class="py-3.5 px-2 text-right">
                         <span class="font-semibold text-slate-800 block">{{ formatCurrency(pos.currentUnitPrice, pos.currency) }}</span>
-                        <span class="text-[10px] text-emerald-600 block">+ 0,50%</span>
+                        <span class="text-[10px] text-emerald-600 block">Cotação Atual</span>
                       </td>
 
                       <!-- Quantidade -->
@@ -289,9 +297,11 @@
                         {{ pos.unrealizedGainLossPercentage >= 0 ? '+ ' : '' }}{{ pos.unrealizedGainLossPercentage.toFixed(2) }}%
                       </td>
 
-                      <!-- Arrow -->
-                      <td class="py-3.5 px-2 text-right text-slate-400 group-hover:text-slate-800">
-                        <ChevronRight class="w-4 h-4 ml-auto" />
+                      <!-- Action Button -->
+                      <td class="py-3.5 px-2 text-right text-slate-400 group-hover:text-[#059669]">
+                        <button class="p-1 rounded bg-slate-100 hover:bg-[#059669] hover:text-white transition" title="Ver Histórico & Editar">
+                          <History class="w-3.5 h-3.5" />
+                        </button>
                       </td>
                     </tr>
                   </tbody>
@@ -385,6 +395,8 @@
               <select v-model="newAsset.valuationType" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-900 outline-none">
                 <option value="TickerMarket">Cotação de Mercado</option>
                 <option value="IndexLinked">Indexado a Índice</option>
+                <option value="FixedRate">Taxa Fixa</option>
+                <option value="ManualBalance">Saldo Manual</option>
                 <option value="ManualFixedValue">Valor Fixo Manual</option>
               </select>
             </div>
@@ -469,6 +481,213 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal 4: Position Details & Transaction History -->
+    <div v-if="showPositionModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white border border-slate-200 w-full max-w-2xl p-6 rounded-2xl shadow-2xl space-y-5 text-xs max-h-[90vh] flex flex-col">
+        <!-- Header -->
+        <div class="flex justify-between items-start border-b border-slate-100 pb-4 shrink-0">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-slate-900 text-base">{{ selectedPosition?.name }}</h3>
+              <span class="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-[#059669] font-mono font-bold text-[11px]">
+                {{ selectedPosition?.ticker || selectedPosition?.assetCategory }}
+              </span>
+            </div>
+            <p class="text-slate-500 text-xs mt-0.5">
+              Histórico de operações e configurações da posição
+            </p>
+          </div>
+          <button @click="showPositionModal = false" class="text-slate-400 hover:text-slate-700 p-1">✕</button>
+        </div>
+
+        <!-- Position Overview Summary Row -->
+        <div class="grid grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 text-center font-mono-numbers shrink-0">
+          <div>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-sans">Quantidade</span>
+            <span class="font-bold text-slate-900 text-sm">{{ selectedPosition?.quantity.toLocaleString() }}</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-sans">Preço Médio</span>
+            <span class="font-bold text-slate-800 text-sm">{{ formatCurrency(selectedPosition?.averagePrice || 0, selectedPosition?.currency) }}</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-sans">Valor Atual</span>
+            <span class="font-bold text-slate-900 text-sm">{{ formatCurrency(selectedPosition?.currentTotalValue || 0, selectedPosition?.currency) }}</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-sans">Lucro / Prejuízo</span>
+            <span :class="[(selectedPosition?.unrealizedGainLoss || 0) >= 0 ? 'text-[#059669]' : 'text-rose-600']" class="font-bold text-sm">
+              {{ (selectedPosition?.unrealizedGainLoss || 0) >= 0 ? '+' : '' }}{{ formatCurrency(selectedPosition?.unrealizedGainLoss || 0, selectedPosition?.currency) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Modal Tabs -->
+        <div class="flex items-center gap-2 border-b border-slate-200 shrink-0">
+          <button
+            @click="positionModalTab = 'transactions'"
+            :class="['pb-2 px-3 font-bold transition text-xs flex items-center gap-1.5', positionModalTab === 'transactions' ? 'text-[#059669] border-b-2 border-[#059669]' : 'text-slate-500 hover:text-slate-800']"
+          >
+            <History class="w-3.5 h-3.5" />
+            <span>Histórico de Operações ({{ positionTransactions.length }})</span>
+          </button>
+          <button
+            @click="positionModalTab = 'editPosition'"
+            :class="['pb-2 px-3 font-bold transition text-xs flex items-center gap-1.5', positionModalTab === 'editPosition' ? 'text-[#059669] border-b-2 border-[#059669]' : 'text-slate-500 hover:text-slate-800']"
+          >
+            <Edit3 class="w-3.5 h-3.5" />
+            <span>Editar Posição / Corrigir Ativo</span>
+          </button>
+        </div>
+
+        <!-- TAB 1: Transactions History -->
+        <div v-if="positionModalTab === 'transactions'" class="flex-1 overflow-y-auto space-y-4 pr-1">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600 font-semibold text-xs">Registro de compras, vendas e rendimentos</span>
+            <button
+              @click="toggleAddTxForm"
+              class="px-3 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs flex items-center gap-1 shadow-xs transition"
+            >
+              <Plus class="w-3.5 h-3.5" />
+              <span>+ Adicionar Transação</span>
+            </button>
+          </div>
+
+          <!-- Inline New/Edit Transaction Form -->
+          <div v-if="showTxForm" class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
+            <h4 class="font-bold text-slate-800 text-xs">{{ editingTxId ? 'Editar Transação' : 'Nova Transação' }}</h4>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-slate-600 mb-1 font-medium">Tipo</label>
+                <select v-model="txForm.transactionType" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-900 outline-none">
+                  <option value="Buy">Compra</option>
+                  <option value="Sell">Venda</option>
+                  <option value="Deposit">Aporte / Depósito</option>
+                  <option value="Withdrawal">Saque / Resgate</option>
+                  <option value="YieldAccrual">Rendimento</option>
+                  <option value="Dividend">Provento / Dividendo</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1 font-medium">Quantidade</label>
+                <input v-model.number="txForm.quantity" type="number" step="any" min="0.00000001" required class="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-900 outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1 font-medium">Preço por Unidade</label>
+                <input v-model.number="txForm.pricePerUnit" type="number" step="any" min="0" required class="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-900 outline-none" />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-600 mb-1 font-medium">Data da Operação</label>
+                <input v-model="txForm.transactionDate" type="date" required class="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-900 outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-1 font-medium">Notas / Observações</label>
+                <input v-model="txForm.notes" type="text" placeholder="Ex: Aporte mensal" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-900 outline-none" />
+              </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-1">
+              <button type="button" @click="showTxForm = false" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 font-medium">Cancelar</button>
+              <button type="button" @click="handleSaveTransaction" class="px-4 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-bold">Salvar Transação</button>
+            </div>
+          </div>
+
+          <!-- Loading state -->
+          <div v-if="isLoadingTransactions" class="py-8 text-center text-slate-400 font-mono text-xs">
+            Carregando transações...
+          </div>
+
+          <!-- Transactions List Table -->
+          <div v-else class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold text-[11px]">
+                <tr>
+                  <th class="py-2.5 px-3">Data</th>
+                  <th class="py-2.5 px-3">Tipo</th>
+                  <th class="py-2.5 px-3 text-right">Qtd</th>
+                  <th class="py-2.5 px-3 text-right">Preço Unit.</th>
+                  <th class="py-2.5 px-3 text-right">Total</th>
+                  <th class="py-2.5 px-3 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 font-mono-numbers">
+                <tr v-if="positionTransactions.length === 0">
+                  <td colspan="6" class="py-8 text-center text-slate-400 font-sans">
+                    Nenhuma operação registrada para este investimento.
+                  </td>
+                </tr>
+                <tr v-for="tx in positionTransactions" :key="tx.id" class="hover:bg-slate-50">
+                  <td class="py-2.5 px-3 font-sans text-slate-700">{{ new Date(tx.transactionDate).toLocaleDateString() }}</td>
+                  <td class="py-2.5 px-3 font-sans">
+                    <span :class="[tx.transactionType === 'Buy' || tx.transactionType === 'Deposit' ? 'bg-emerald-50 text-[#059669] border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200']" class="px-2 py-0.5 rounded border text-[10px] font-bold">
+                      {{ tx.transactionType === 'Buy' ? 'Compra' : tx.transactionType === 'Sell' ? 'Venda' : tx.transactionType }}
+                    </span>
+                  </td>
+                  <td class="py-2.5 px-3 text-right font-semibold text-slate-900">{{ tx.quantity.toLocaleString() }}</td>
+                  <td class="py-2.5 px-3 text-right text-slate-600">{{ formatCurrency(tx.pricePerUnit, tx.currency) }}</td>
+                  <td class="py-2.5 px-3 text-right font-bold text-slate-900">{{ formatCurrency(tx.totalAmount, tx.currency) }}</td>
+                  <td class="py-2.5 px-3 text-right font-sans">
+                    <div class="flex items-center justify-end gap-1.5">
+                      <button @click="editTx(tx)" class="p-1 rounded text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition" title="Editar Operação">
+                        <Edit3 class="w-3.5 h-3.5" />
+                      </button>
+                      <button @click="deleteTx(tx.id)" class="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" title="Excluir Operação">
+                        <Trash2 class="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 2: Edit Position / Change Asset -->
+        <div v-else-if="positionModalTab === 'editPosition'" class="flex-1 overflow-y-auto space-y-4 pr-1">
+          <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs">
+            <strong class="font-bold">Errou ao selecionar o ativo?</strong> Você pode trocar o ativo master desta posição (ex: mudando de AAPL para outro ativo) sem precisar deletar suas operações!
+          </div>
+
+          <form @submit.prevent="handleSavePositionEdit" class="space-y-3">
+            <div>
+              <label class="block text-slate-600 mb-1 font-medium">Ativo Master Vinculado</label>
+              <select v-model="positionEditForm.assetId" required class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-900 outline-none focus:border-[#059669]">
+                <option v-for="ast in portfolioStore.assets" :key="ast.id" :value="ast.id">
+                  {{ ast.name }} {{ ast.ticker ? `(${ast.ticker})` : '' }} - {{ ast.assetCategory }} ({{ ast.currency }})
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-slate-600 mb-1 font-medium">Conta / Corretora de Custódia</label>
+              <select v-model="positionEditForm.accountId" required class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-900 outline-none focus:border-[#059669]">
+                <option v-for="acc in portfolioStore.accounts" :key="acc.id" :value="acc.id">
+                  {{ acc.name }} ({{ acc.institution }} - {{ acc.baseCurrency }})
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-slate-600 mb-1 font-medium">Nome Personalizado / Apelido (Opcional)</label>
+              <input v-model="positionEditForm.customName" type="text" placeholder="Ex: Minha posição de longo prazo" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-900 outline-none focus:border-[#059669]" />
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
+              <button type="button" @click="handleDeletePosition" class="px-4 py-2 rounded-lg bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-bold transition flex items-center gap-1.5">
+                <Trash2 class="w-3.5 h-3.5" />
+                <span>Excluir Posição Inteira</span>
+              </button>
+
+              <button type="submit" class="px-5 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-bold transition">
+                Salvar Alterações
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -477,8 +696,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
-import { Search, Plus, Wallet, Layers, LogOut, TrendingUp, PieChart, ChevronDown, ChevronRight, Briefcase } from '@lucide/vue';
-import type { PositionSummary } from '@/types';
+import { Search, Plus, Wallet, Layers, LogOut, TrendingUp, PieChart, ChevronDown, Briefcase, RefreshCw, History, Edit3, Trash2 } from '@lucide/vue';
+import type { PositionSummary, Transaction } from '@/types';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -530,10 +749,23 @@ const filteredPositions = computed(() => {
   );
 });
 
+const availableCash = computed(() => {
+  const cashPositions = positions.value.filter(p => p.assetCategory === 'Cash');
+  if (cashPositions.length === 0) return 0;
+  return cashPositions.reduce((sum, p) => {
+    if (displayCurrency.value === 'BRL') {
+      return sum + (p.currency === 'BRL' ? p.currentTotalValue : p.currentTotalValue * (summary.value?.usdBrlFxRate || 5.5));
+    } else {
+      return sum + (p.currency === 'USD' ? p.currentTotalValue : p.currentTotalValue / (summary.value?.usdBrlFxRate || 5.5));
+    }
+  }, 0);
+});
+
 // Group Positions by Category
 const categoryGroups = computed(() => {
   const map = new Map<string, PositionSummary[]>();
   const netWorth = summary.value?.totalNetWorthBrl || 1;
+  const fxRate = summary.value?.usdBrlFxRate || 5.5;
 
   for (const pos of filteredPositions.value) {
     const cat = pos.assetCategory || 'Outros';
@@ -551,15 +783,30 @@ const categoryGroups = computed(() => {
   }> = [];
 
   for (const [category, items] of map.entries()) {
-    const totalValue = items.reduce((sum, i) => sum + (displayCurrency.value === 'BRL' ? i.currentTotalValue : i.currentTotalValue / (summary.value?.usdBrlFxRate || 5.5)), 0);
-    const totalCost = items.reduce((sum, i) => sum + (displayCurrency.value === 'BRL' ? i.totalCost : i.totalCost / (summary.value?.usdBrlFxRate || 5.5)), 0);
+    let totalValBrl = 0;
+    let totalCostBrl = 0;
+
+    for (const item of items) {
+      const itemValBrl = item.currency === 'USD' ? item.currentTotalValue * fxRate : item.currentTotalValue;
+      const itemCostBrl = item.currency === 'USD' ? item.totalCost * fxRate : item.totalCost;
+      totalValBrl += itemValBrl;
+      totalCostBrl += itemCostBrl;
+    }
+
+    const totalValue = displayCurrency.value === 'BRL' ? totalValBrl : totalValBrl / fxRate;
+    const totalCost = displayCurrency.value === 'BRL' ? totalCostBrl : totalCostBrl / fxRate;
     const totalGainLoss = totalValue - totalCost;
     const returnPct = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0;
-    
-    const totalBrl = items.reduce((sum, i) => sum + i.currentTotalValue, 0);
-    const percentage = netWorth > 0 ? (totalBrl / netWorth) * 100 : 0;
+    const percentage = netWorth > 0 ? (totalValBrl / netWorth) * 100 : 0;
 
-    result.push({ category, items, totalValue, totalGainLoss, returnPct, percentage });
+    result.push({
+      category,
+      items,
+      totalValue: isNaN(totalValue) ? 0 : totalValue,
+      totalGainLoss: isNaN(totalGainLoss) ? 0 : totalGainLoss,
+      returnPct: isNaN(returnPct) ? 0 : returnPct,
+      percentage: isNaN(percentage) ? 0 : percentage,
+    });
   }
 
   if (expandAll.value && expandedCategories.value.length === 0 && result.length > 0) {
@@ -619,11 +866,13 @@ function calculateOverallReturnPct() {
   if (!summary.value) return '0.00';
   const invested = summary.value.totalInvestedBrl;
   const gain = summary.value.netGainLossBrl;
-  if (invested <= 0) return '0.00';
-  return ((gain / invested) * 100).toFixed(2);
+  if (!invested || invested <= 0 || isNaN(invested) || isNaN(gain)) return '0.00';
+  const pct = (gain / invested) * 100;
+  return isNaN(pct) ? '0.00' : pct.toFixed(2);
 }
 
 function formatCurrency(val: number, currency?: string) {
+  if (val === undefined || val === null || isNaN(val)) return 'R$ 0,00';
   const curr = currency || displayCurrency.value;
   return new Intl.NumberFormat(curr === 'BRL' ? 'pt-BR' : 'en-US', {
     style: 'currency',
@@ -658,10 +907,15 @@ async function openAddInvestmentModal() {
 }
 
 async function submitAddAccount() {
-  await portfolioStore.createAccount(newAccount.value);
-  showAddAccountModal.value = false;
-  newAccount.value = { name: '', institution: '', accountType: 'Brokerage', baseCurrency: 'BRL' };
-  await portfolioStore.fetchAccounts();
+  try {
+    await portfolioStore.createAccount(newAccount.value);
+    showAddAccountModal.value = false;
+    newAccount.value = { name: '', institution: '', accountType: 'Brokerage', baseCurrency: 'BRL' };
+    await portfolioStore.fetchAccounts();
+  } catch (err: any) {
+    const msg = err.response?.data?.message || err.response?.data?.title || err.message || 'Erro ao criar conta.';
+    alert(`Erro ao adicionar conta: ${msg}`);
+  }
 }
 
 async function submitAddAsset() {
@@ -674,18 +928,23 @@ async function submitAddAsset() {
     indexBenchmark: newAsset.value.indexBenchmark,
     logoUrl: newAsset.value.logoUrl || null,
   };
-  await portfolioStore.createAsset(payload);
-  showAddAssetModal.value = false;
-  newAsset.value = {
-    name: '',
-    ticker: '',
-    assetCategory: 'Stock_BR',
-    valuationType: 'TickerMarket',
-    currency: 'BRL',
-    indexBenchmark: 'None',
-    logoUrl: '',
-  };
-  await portfolioStore.fetchAssets();
+  try {
+    await portfolioStore.createAsset(payload);
+    showAddAssetModal.value = false;
+    newAsset.value = {
+      name: '',
+      ticker: '',
+      assetCategory: 'Stock_BR',
+      valuationType: 'TickerMarket',
+      currency: 'BRL',
+      indexBenchmark: 'None',
+      logoUrl: '',
+    };
+    await portfolioStore.fetchAssets();
+  } catch (err: any) {
+    const msg = err.response?.data?.message || err.response?.data?.title || err.message || 'Erro ao criar ativo.';
+    alert(`Erro ao cadastrar ativo: ${msg}`);
+  }
 }
 
 async function submitAddInvestment() {
@@ -723,6 +982,171 @@ async function submitAddInvestment() {
   } catch (err: any) {
     const msg = err.response?.data?.message || err.message || 'Erro ao registrar operação.';
     alert(`Erro ao adicionar operação: ${msg}`);
+  }
+}
+
+// Market Price Sync
+async function handleSyncMarketData() {
+  try {
+    await portfolioStore.syncMarketData();
+    alert('Cotações e taxas sincronizadas com sucesso! As posições foram recalculadas.');
+  } catch (err: any) {
+    alert(`Erro ao sincronizar preços: ${err.response?.data?.message || err.message || 'Falha na comunicação com o servidor'}`);
+  }
+}
+
+// Position Modal State & Logic
+const showPositionModal = ref(false);
+const selectedPosition = ref<PositionSummary | null>(null);
+const positionTransactions = ref<Transaction[]>([]);
+const isLoadingTransactions = ref(false);
+const positionModalTab = ref<'transactions' | 'editPosition'>('transactions');
+
+const positionEditForm = ref({
+  assetId: '',
+  accountId: '',
+  customName: '',
+});
+
+const showTxForm = ref(false);
+const editingTxId = ref<string | null>(null);
+const txForm = ref({
+  transactionType: 'Buy',
+  transactionDate: new Date().toISOString().substring(0, 10),
+  quantity: 1,
+  pricePerUnit: 0,
+  notes: '',
+});
+
+async function openPositionModal(pos: PositionSummary) {
+  selectedPosition.value = pos;
+  positionModalTab.value = 'transactions';
+  showTxForm.value = false;
+  editingTxId.value = null;
+
+  const assetMatch = portfolioStore.assets.find(a => a.name === pos.name || a.ticker === pos.ticker);
+  const accountMatch = portfolioStore.accounts[0];
+
+  positionEditForm.value = {
+    assetId: assetMatch?.id || portfolioStore.assets[0]?.id || '',
+    accountId: accountMatch?.id || portfolioStore.accounts[0]?.id || '',
+    customName: pos.name,
+  };
+
+  showPositionModal.value = true;
+  await fetchPositionTransactions();
+}
+
+async function fetchPositionTransactions() {
+  if (!selectedPosition.value) return;
+  isLoadingTransactions.value = true;
+  try {
+    positionTransactions.value = await portfolioStore.fetchTransactions(selectedPosition.value.investmentId);
+  } catch (err: any) {
+    console.error('Failed to load transactions', err);
+  } finally {
+    isLoadingTransactions.value = false;
+  }
+}
+
+function toggleAddTxForm() {
+  editingTxId.value = null;
+  txForm.value = {
+    transactionType: 'Buy',
+    transactionDate: new Date().toISOString().substring(0, 10),
+    quantity: 1,
+    pricePerUnit: selectedPosition.value?.averagePrice || 0,
+    notes: '',
+  };
+  showTxForm.value = true;
+}
+
+function editTx(tx: Transaction) {
+  editingTxId.value = tx.id;
+  txForm.value = {
+    transactionType: tx.transactionType as any,
+    transactionDate: new Date(tx.transactionDate).toISOString().substring(0, 10),
+    quantity: tx.quantity,
+    pricePerUnit: tx.pricePerUnit,
+    notes: tx.notes || '',
+  };
+  showTxForm.value = true;
+}
+
+async function handleSaveTransaction() {
+  if (!selectedPosition.value) return;
+  try {
+    const payload = {
+      investmentId: selectedPosition.value.investmentId,
+      accountId: positionEditForm.value.accountId || portfolioStore.accounts[0]?.id,
+      transactionType: txForm.value.transactionType,
+      transactionDate: new Date(txForm.value.transactionDate).toISOString(),
+      quantity: txForm.value.quantity,
+      pricePerUnit: txForm.value.pricePerUnit,
+      totalAmount: txForm.value.quantity * txForm.value.pricePerUnit,
+      feeAmount: 0,
+      taxAmount: 0,
+      currency: selectedPosition.value.currency,
+      notes: txForm.value.notes,
+    };
+
+    if (editingTxId.value) {
+      await portfolioStore.updateTransaction(editingTxId.value, payload);
+    } else {
+      await portfolioStore.createTransaction(payload);
+    }
+
+    showTxForm.value = false;
+    await fetchPositionTransactions();
+    await portfolioStore.fetchPortfolioSummary();
+    
+    const updatedPos = portfolioStore.summary?.positions.find(p => p.investmentId === selectedPosition.value?.investmentId);
+    if (updatedPos) selectedPosition.value = updatedPos;
+  } catch (err: any) {
+    alert(`Erro ao salvar transação: ${err.message}`);
+  }
+}
+
+async function deleteTx(txId: string) {
+  if (!confirm('Excluir esta transação?')) return;
+  try {
+    await portfolioStore.deleteTransaction(txId);
+    await fetchPositionTransactions();
+    await portfolioStore.fetchPortfolioSummary();
+    const updatedPos = portfolioStore.summary?.positions.find(p => p.investmentId === selectedPosition.value?.investmentId);
+    if (updatedPos) selectedPosition.value = updatedPos;
+  } catch (err: any) {
+    alert(`Erro ao excluir transação: ${err.message}`);
+  }
+}
+
+async function handleSavePositionEdit() {
+  if (!selectedPosition.value) return;
+  try {
+    await portfolioStore.updateInvestment(selectedPosition.value.investmentId, {
+      accountId: positionEditForm.value.accountId,
+      assetId: positionEditForm.value.assetId,
+      customName: positionEditForm.value.customName || undefined,
+    });
+
+    showPositionModal.value = false;
+    await portfolioStore.fetchPortfolioSummary();
+    alert('Posição atualizada com sucesso!');
+  } catch (err: any) {
+    alert(`Erro ao atualizar posição: ${err.message}`);
+  }
+}
+
+async function handleDeletePosition() {
+  if (!selectedPosition.value) return;
+  if (!confirm(`Tem certeza que deseja excluir a posição "${selectedPosition.value.name}" e todas as suas operações?`)) return;
+
+  try {
+    await portfolioStore.deleteInvestment(selectedPosition.value.investmentId);
+    showPositionModal.value = false;
+    await portfolioStore.fetchPortfolioSummary();
+  } catch (err: any) {
+    alert(`Erro ao excluir posição: ${err.message}`);
   }
 }
 </script>

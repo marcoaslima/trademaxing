@@ -15,14 +15,49 @@ export interface Account {
   createdAt: string;
 }
 
+export type AssetCategory = 
+  | 'Stock_BR' 
+  | 'Stock_US' 
+  | 'Etf_BR' 
+  | 'Etf_US' 
+  | 'Bond_BR_FixedIncome'
+  | 'FixedIncome_BR' 
+  | 'Bond_US_Public' 
+  | 'Bond_US_Private' 
+  | 'Crypto' 
+  | 'REIT_BR' 
+  | 'REIT_US' 
+  | 'FGTS' 
+  | 'Cash' 
+  | 'Fund_BR' 
+  | 'Fund_US' 
+  | 'P2P_Lending';
+
+export type ValuationType = 
+  | 'TickerMarket' 
+  | 'IndexLinked' 
+  | 'FixedRate' 
+  | 'ManualBalance' 
+  | 'ManualFixedValue';
+
+export type IndexBenchmark = 
+  | 'None' 
+  | 'CDI' 
+  | 'IPCA' 
+  | 'TR' 
+  | 'SELIC' 
+  | 'SP500' 
+  | 'IBOVESPA' 
+  | 'IGPM';
+
 export interface Asset {
   id: string;
   name: string;
   ticker?: string;
-  assetCategory: string;
-  valuationType: string;
+  assetCategory: AssetCategory;
+  valuationType: ValuationType;
   currency: 'BRL' | 'USD';
-  indexBenchmark?: string;
+  indexBenchmark?: IndexBenchmark;
   logoUrl?: string;
 }
 
@@ -69,6 +104,22 @@ export interface PortfolioSummary {
   netGainLossUsd: number;
   usdBrlFxRate: number;
   positions: PositionSummary[];
+}
+
+export interface Transaction {
+  id: string;
+  investmentId: string;
+  accountId: string;
+  transactionType: 'Buy' | 'Sell' | 'Deposit' | 'Withdrawal' | 'YieldAccrual' | 'Dividend' | 'Coupon' | 'Fee' | 'Tax' | 'Split' | 'Bonus';
+  transactionDate: string;
+  quantity: number;
+  pricePerUnit: number;
+  totalAmount: number;
+  feeAmount: number;
+  taxAmount: number;
+  currency: 'BRL' | 'USD';
+  notes?: string;
+  createdAt: string;
 }
 
 export interface PortfolioSnapshot {

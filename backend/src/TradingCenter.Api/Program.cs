@@ -18,7 +18,14 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true));
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true));
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
 // 2. Layer Services Registration
@@ -99,5 +106,6 @@ app.MapAccountEndpoints();
 app.MapInvestmentEndpoints();
 app.MapTransactionEndpoints();
 app.MapPortfolioEndpoints();
+app.MapMarketDataEndpoints();
 
 app.Run();

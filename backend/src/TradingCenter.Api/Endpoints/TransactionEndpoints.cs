@@ -36,5 +36,30 @@ public static class TransactionEndpoints
                 return Results.BadRequest(new { message = ex.Message });
             }
         });
+
+        group.MapPut("/{id:guid}", async (Guid id, CreateTransactionDto dto, ITransactionService transactionService, IValidator<CreateTransactionDto> validator, CancellationToken ct) =>
+        {
+            var result = await validator.ValidateAsync(dto, ct);
+            if (!result.IsValid)
+            {
+                return Results.ValidationProblem(result.ToDictionary());
+            }
+
+            try
+            {
+                var updated = await transactionService.UpdateTransactionAsync(id, dto, ct);
+                return updated != null ? Results.Ok(updated) : Results.NotFound();
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
+        });
+
+        group.MapDelete("/{id:guid}", async (Guid id, ITransactionService transactionService, CancellationToken ct) =>
+        {
+            var deleted = await transactionService.DeleteTransactionAsync(id, ct);
+            return deleted ? Results.NoContent() : Results.NotFound();
+        });
     }
 }

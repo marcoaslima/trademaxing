@@ -2,7 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
 import LoginView from '@/views/LoginView.vue';
 import DashboardView from '@/views/DashboardView.vue';
-import ManageView from '@/views/ManageView.vue';
+import AccountsView from '@/views/AccountsView.vue';
+import AssetsView from '@/views/AssetsView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -24,10 +25,20 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/manage',
-      name: 'manage',
-      component: ManageView,
+      path: '/accounts',
+      name: 'accounts',
+      component: AccountsView,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/assets',
+      name: 'assets',
+      component: AssetsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/manage',
+      redirect: '/accounts',
     },
   ],
 });

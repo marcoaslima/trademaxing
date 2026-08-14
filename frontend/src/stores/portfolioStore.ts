@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import apiClient from '@/api/client';
-import type { PortfolioSummary, PortfolioSnapshot, Account, Asset, Investment } from '@/types';
+import type { PortfolioSummary, PortfolioSnapshot, Account, Asset, Investment, Transaction } from '@/types';
 
 export const usePortfolioStore = defineStore('portfolio', () => {
   const summary = ref<PortfolioSummary | null>(null);
@@ -9,6 +9,7 @@ export const usePortfolioStore = defineStore('portfolio', () => {
   const accounts = ref<Account[]>([]);
   const assets = ref<Asset[]>([]);
   const investments = ref<Investment[]>([]);
+  const isSyncingPrices = ref(false);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
@@ -70,10 +71,38 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     return response.data;
   }
 
+  async function updateInvestment(id: string, data: { accountId: string; assetId: string; customName?: string; interestRate?: number; maturityDate?: string }) {
+    const response = await apiClient.put<Investment>(`/investments/${id}`, data);
+    await fetchPortfolioSummary();
+    return response.data;
+  }
+
+  async function deleteInvestment(id: string) {
+    await apiClient.delete(`/investments/${id}`);
+    await fetchPortfolioSummary();
+  }
+
+  async function fetchTransactions(investmentId?: string): Promise<Transaction[]> {
+    const params = investmentId ? { investmentId } : {};
+    const response = await apiClient.get<Transaction[]>('/transactions', { params });
+    return response.data;
+  }
+
   async function createTransaction(data: any) {
     const response = await apiClient.post('/transactions', data);
     await fetchPortfolioSummary();
     return response.data;
+  }
+
+  async function updateTransaction(id: string, data: any) {
+    const response = await apiClient.put(`/transactions/${id}`, data);
+    await fetchPortfolioSummary();
+    return response.data;
+  }
+
+  async function deleteTransaction(id: string) {
+    await apiClient.delete(`/transactions/${id}`);
+    await fetchPortfolioSummary();
   }
 
   async function updateAccount(id: string, data: any) {
@@ -98,6 +127,16 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     await fetchAssets();
   }
 
+  async function syncMarketData() {
+    isSyncingPrices.value = true;
+    try {
+      await apiClient.post('/market-data/sync');
+      await fetchPortfolioSummary();
+    } finally {
+      isSyncingPrices.value = false;
+    }
+  }
+
   return {
     summary,
     snapshots,
@@ -105,6 +144,7 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     assets,
     investments,
     isLoading,
+    isSyncingPrices,
     error,
     fetchPortfolioSummary,
     fetchPortfolioHistory,
@@ -117,6 +157,12 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     updateAsset,
     deleteAsset,
     createInvestment,
+    updateInvestment,
+    deleteInvestment,
+    fetchTransactions,
     createTransaction,
+    updateTransaction,
+    deleteTransaction,
+    syncMarketData,
   };
 });

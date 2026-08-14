@@ -12,5 +12,10 @@ public enum AssetCategory
     Fund_BR = 8,
     REIT_US = 9,
     REIT_BR = 10, // FII
-    P2P_Lending = 11
+    P2P_Lending = 11,
+    Etf_BR = 12,
+    Etf_US = 13,
+    FixedIncome_BR = 14,
+    Crypto = 15,
+    Cash = 16
 }

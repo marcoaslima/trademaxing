@@ -262,6 +262,8 @@
               <select v-model="assetForm.valuationType" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-900 outline-none">
                 <option value="TickerMarket">Cotação de Mercado</option>
                 <option value="IndexLinked">Indexado a Índice</option>
+                <option value="FixedRate">Taxa Fixa</option>
+                <option value="ManualBalance">Saldo Manual</option>
                 <option value="ManualFixedValue">Valor Fixo Manual</option>
               </select>
             </div>
@@ -381,19 +383,28 @@ function openEditAccountModal(acc: Account) {
 }
 
 async function saveAccount() {
-  if (isEditingAccount.value && editingAccountId.value) {
-    await portfolioStore.updateAccount(editingAccountId.value, accountForm.value);
-  } else {
-    await portfolioStore.createAccount(accountForm.value);
+  try {
+    if (isEditingAccount.value && editingAccountId.value) {
+      await portfolioStore.updateAccount(editingAccountId.value, accountForm.value);
+    } else {
+      await portfolioStore.createAccount(accountForm.value);
+    }
+    showAccountModal.value = false;
+    await portfolioStore.fetchAccounts();
+  } catch (err: any) {
+    const msg = err.response?.data?.message || err.response?.data?.title || err.message || 'Erro ao salvar conta.';
+    alert(`Erro ao salvar conta: ${msg}`);
   }
-  showAccountModal.value = false;
-  await portfolioStore.fetchAccounts();
 }
 
 async function confirmDeleteAccount(acc: Account) {
   if (confirm(`Excluir conta "${acc.name}"?`)) {
-    await portfolioStore.deleteAccount(acc.id);
-    await portfolioStore.fetchAccounts();
+    try {
+      await portfolioStore.deleteAccount(acc.id);
+      await portfolioStore.fetchAccounts();
+    } catch (err: any) {
+      alert(`Erro ao excluir conta: ${err.response?.data?.message || err.message}`);
+    }
   }
 }
 
@@ -439,13 +450,18 @@ async function saveAsset() {
     logoUrl: assetForm.value.logoUrl || null,
   };
 
-  if (isEditingAsset.value && editingAssetId.value) {
-    await portfolioStore.updateAsset(editingAssetId.value, payload);
-  } else {
-    await portfolioStore.createAsset(payload);
+  try {
+    if (isEditingAsset.value && editingAssetId.value) {
+      await portfolioStore.updateAsset(editingAssetId.value, payload);
+    } else {
+      await portfolioStore.createAsset(payload);
+    }
+    showAssetModal.value = false;
+    await portfolioStore.fetchAssets();
+  } catch (err: any) {
+    const msg = err.response?.data?.message || err.response?.data?.title || err.message || 'Erro ao salvar ativo.';
+    alert(`Erro ao salvar ativo: ${msg}`);
   }
-  showAssetModal.value = false;
-  await portfolioStore.fetchAssets();
 }
 
 async function confirmDeleteAsset(ast: Asset) {

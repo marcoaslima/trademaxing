@@ -11,6 +11,8 @@ public interface IInvestmentService
     Task<IReadOnlyList<InvestmentDto>> GetInvestmentsAsync(Guid? accountId = null, CancellationToken ct = default);
     Task<InvestmentDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<InvestmentDto> CreateInvestmentAsync(CreateInvestmentDto dto, CancellationToken ct = default);
+    Task<InvestmentDto?> UpdateInvestmentAsync(Guid id, CreateInvestmentDto dto, CancellationToken ct = default);
+    Task<bool> DeleteInvestmentAsync(Guid id, CancellationToken ct = default);
     Task<CreateAssetDto> CreateAssetAsync(CreateAssetDto dto, CancellationToken ct = default);
     Task<Asset?> UpdateAssetAsync(Guid id, CreateAssetDto dto, CancellationToken ct = default);
     Task<bool> DeleteAssetAsync(Guid id, CancellationToken ct = default);
@@ -89,6 +91,58 @@ public class InvestmentService : IInvestmentService
         await _unitOfWork.SaveChangesAsync(ct);
 
         return _mapper.Map<InvestmentDto>(investment);
+    }
+
+    public async Task<InvestmentDto?> UpdateInvestmentAsync(Guid id, CreateInvestmentDto dto, CancellationToken ct = default)
+    {
+        var repository = _unitOfWork.Repository<Investment>();
+        var investment = await repository.GetByIdAsync(id, ct);
+        if (investment == null) return null;
+
+        var asset = await _unitOfWork.Repository<Asset>().GetByIdAsync(dto.AssetId, ct)
+            ?? throw new ArgumentException($"Master Asset with ID '{dto.AssetId}' not found.");
+
+        var account = await _unitOfWork.Repository<Account>().GetByIdAsync(dto.AccountId, ct)
+            ?? throw new ArgumentException($"Broker Account with ID '{dto.AccountId}' not found.");
+
+        investment.AccountId = dto.AccountId;
+        investment.AssetId = dto.AssetId;
+        investment.CustomName = dto.CustomName;
+        investment.InterestRate = dto.InterestRate;
+        investment.MaturityDate = dto.MaturityDate;
+        investment.Asset = asset;
+        investment.Account = account;
+
+        // Also update accountId on existing transactions linked to this investment
+        var transactions = await _unitOfWork.Repository<Transaction>().FindAsync(t => t.InvestmentId == id, ct);
+        foreach (var tx in transactions)
+        {
+            tx.AccountId = dto.AccountId;
+            _unitOfWork.Repository<Transaction>().Update(tx);
+        }
+
+        repository.Update(investment);
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        return _mapper.Map<InvestmentDto>(investment);
+    }
+
+    public async Task<bool> DeleteInvestmentAsync(Guid id, CancellationToken ct = default)
+    {
+        var repository = _unitOfWork.Repository<Investment>();
+        var investment = await repository.GetByIdAsync(id, ct);
+        if (investment == null) return false;
+
+        // Delete associated transactions
+        var transactions = await _unitOfWork.Repository<Transaction>().FindAsync(t => t.InvestmentId == id, ct);
+        foreach (var tx in transactions)
+        {
+            _unitOfWork.Repository<Transaction>().Remove(tx);
+        }
+
+        repository.Remove(investment);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return true;
     }
 
     public async Task<CreateAssetDto> CreateAssetAsync(CreateAssetDto dto, CancellationToken ct = default)

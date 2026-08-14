@@ -42,5 +42,30 @@ public static class InvestmentEndpoints
                 return Results.BadRequest(new { message = ex.Message });
             }
         });
+
+        group.MapPut("/{id:guid}", async (Guid id, CreateInvestmentDto dto, IInvestmentService investmentService, IValidator<CreateInvestmentDto> validator, CancellationToken ct) =>
+        {
+            var result = await validator.ValidateAsync(dto, ct);
+            if (!result.IsValid)
+            {
+                return Results.ValidationProblem(result.ToDictionary());
+            }
+
+            try
+            {
+                var updated = await investmentService.UpdateInvestmentAsync(id, dto, ct);
+                return updated != null ? Results.Ok(updated) : Results.NotFound();
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
+        });
+
+        group.MapDelete("/{id:guid}", async (Guid id, IInvestmentService investmentService, CancellationToken ct) =>
+        {
+            var deleted = await investmentService.DeleteInvestmentAsync(id, ct);
+            return deleted ? Results.NoContent() : Results.NotFound();
+        });
     }
 }

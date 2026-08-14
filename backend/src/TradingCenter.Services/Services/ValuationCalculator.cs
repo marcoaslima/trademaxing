@@ -18,6 +18,7 @@ public class ValuationCalculator : IValuationCalculator
             ValuationType.IndexLinked => CalculateIndexAccrual(customInterestRate, dailyIndexRate),
             ValuationType.FixedRate => CalculateFixedRateYield(customInterestRate),
             ValuationType.ManualBalance => 1.0m,
+            ValuationType.ManualFixedValue => 1.0m,
             _ => 1.0m
         };
     }
