@@ -465,8 +465,15 @@
           </div>
 
           <div>
-            <label class="block text-slate-600 mb-1 font-medium">Data da Operação</label>
-            <input v-model="newHolding.transactionDate" type="date" required class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-900 outline-none" />
+            <label class="block text-slate-600 mb-1 font-medium">Data da Operação (DD/MM/AAAA)</label>
+            <input
+              v-model="newHolding.transactionDate"
+              @input="newHolding.transactionDate = maskDateBR(newHolding.transactionDate)"
+              type="text"
+              placeholder="Ex: 22/10/2024"
+              required
+              class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-900 outline-none focus:border-[#059669]"
+            />
           </div>
 
           <div class="flex justify-end gap-2 pt-2">
@@ -575,8 +582,15 @@
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="block text-slate-600 mb-1 font-medium">Data da Operação</label>
-                <input v-model="txForm.transactionDate" type="date" required class="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-900 outline-none" />
+                <label class="block text-slate-600 mb-1 font-medium">Data da Operação (DD/MM/AAAA)</label>
+                <input
+                  v-model="txForm.transactionDate"
+                  @input="txForm.transactionDate = maskDateBR(txForm.transactionDate)"
+                  type="text"
+                  placeholder="Ex: 22/10/2024"
+                  required
+                  class="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-900 outline-none focus:border-[#059669]"
+                />
               </div>
               <div>
                 <label class="block text-slate-600 mb-1 font-medium">Notas / Observações</label>
@@ -691,7 +705,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
-import { formatDateBR } from '@/utils/formatters';
+import { formatDateBR, maskDateBR, parseDateBRToISO } from '@/utils/formatters';
 import { Search, Plus, Wallet, Layers, LogOut, TrendingUp, PieChart, ChevronDown, Briefcase, RefreshCw, History, Edit3, Trash2 } from '@lucide/vue';
 import type { PositionSummary, Transaction } from '@/types';
 
@@ -731,7 +745,7 @@ const newHolding = ref({
   customName: '',
   quantity: 1,
   pricePerUnit: 100,
-  transactionDate: new Date().toISOString().substring(0, 10),
+  transactionDate: formatDateBR(new Date()),
 });
 
 const summary = computed(() => portfolioStore.summary);
@@ -963,12 +977,13 @@ async function submitAddInvestment() {
 
     const selectedAsset = portfolioStore.assets.find(a => a.id === newHolding.value.assetId);
     const currency = selectedAsset?.currency || 'BRL';
+    const isoDateStr = parseDateBRToISO(newHolding.value.transactionDate);
 
     await portfolioStore.createTransaction({
       investmentId: inv.id,
       accountId: newHolding.value.accountId,
       transactionType: 'Buy',
-      transactionDate: new Date(newHolding.value.transactionDate).toISOString(),
+      transactionDate: new Date(isoDateStr).toISOString(),
       quantity: newHolding.value.quantity,
       pricePerUnit: newHolding.value.pricePerUnit,
       totalAmount: newHolding.value.quantity * newHolding.value.pricePerUnit,
@@ -1013,7 +1028,7 @@ const showTxForm = ref(false);
 const editingTxId = ref<string | null>(null);
 const txForm = ref({
   transactionType: 'Buy',
-  transactionDate: new Date().toISOString().substring(0, 10),
+  transactionDate: formatDateBR(new Date()),
   quantity: 1,
   pricePerUnit: 0,
   notes: '',
@@ -1054,7 +1069,7 @@ function toggleAddTxForm() {
   editingTxId.value = null;
   txForm.value = {
     transactionType: 'Buy',
-    transactionDate: new Date().toISOString().substring(0, 10),
+    transactionDate: formatDateBR(new Date()),
     quantity: 1,
     pricePerUnit: selectedPosition.value?.averagePrice || 0,
     notes: '',
@@ -1066,7 +1081,7 @@ function editTx(tx: Transaction) {
   editingTxId.value = tx.id;
   txForm.value = {
     transactionType: tx.transactionType as any,
-    transactionDate: new Date(tx.transactionDate).toISOString().substring(0, 10),
+    transactionDate: formatDateBR(tx.transactionDate),
     quantity: tx.quantity,
     pricePerUnit: tx.pricePerUnit,
     notes: tx.notes || '',
@@ -1077,11 +1092,12 @@ function editTx(tx: Transaction) {
 async function handleSaveTransaction() {
   if (!selectedPosition.value) return;
   try {
+    const isoDateStr = parseDateBRToISO(txForm.value.transactionDate);
     const payload = {
       investmentId: selectedPosition.value.investmentId,
       accountId: positionEditForm.value.accountId || portfolioStore.accounts[0]?.id,
       transactionType: txForm.value.transactionType,
-      transactionDate: new Date(txForm.value.transactionDate).toISOString(),
+      transactionDate: new Date(isoDateStr).toISOString(),
       quantity: txForm.value.quantity,
       pricePerUnit: txForm.value.pricePerUnit,
       totalAmount: txForm.value.quantity * txForm.value.pricePerUnit,
