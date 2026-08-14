@@ -62,7 +62,7 @@ public class MarketDataSyncService : IMarketDataSyncService
                 {
                     ptax = new PtaxRate
                     {
-                        RateDate = date.Date,
+                        RateDate = utcDate,
                         BuyRate = buyRate,
                         SellRate = sellRate
                     };
@@ -84,7 +84,7 @@ public class MarketDataSyncService : IMarketDataSyncService
                     {
                         FromCurrency = Currency.USD,
                         ToCurrency = Currency.BRL,
-                        RateDate = date.Date,
+                        RateDate = utcDate,
                         Rate = sellRate
                     }, ct);
                 }
@@ -195,7 +195,7 @@ public class MarketDataSyncService : IMarketDataSyncService
             await _unitOfWork.Repository<MarketPrice>().AddAsync(new MarketPrice
             {
                 Ticker = symbol,
-                PriceDate = date.Date,
+                PriceDate = targetDate,
                 ClosingPrice = price,
                 Currency = currency
             }, ct);
@@ -225,7 +225,7 @@ public class MarketDataSyncService : IMarketDataSyncService
 
     public async Task SyncEconomicIndexesAsync(CancellationToken ct = default)
     {
-        var today = DateTime.Today;
+        var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
 
         // Sync CDI (Series 12)
         await SyncBcbSeriesIndexAsync(12, IndexBenchmark.CDI, today, ct);
@@ -253,7 +253,7 @@ public class MarketDataSyncService : IMarketDataSyncService
                     await _unitOfWork.Repository<EconomicIndex>().AddAsync(new EconomicIndex
                     {
                         IndexCode = indexCode,
-                        IndexDate = today,
+                        IndexDate = targetDate,
                         DailyRate = dailyRate
                     }, ct);
                 }

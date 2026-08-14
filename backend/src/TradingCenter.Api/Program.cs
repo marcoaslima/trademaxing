@@ -10,6 +10,8 @@ using TradingCenter.Domain.Interfaces;
 using TradingCenter.Repository;
 using TradingCenter.Services;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Core Services & Composition Root
