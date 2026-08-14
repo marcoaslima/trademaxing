@@ -84,6 +84,7 @@ try
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<TradingCenter.Repository.Context.AppDbContext>();
     dbContext.Database.ExecuteSqlRaw("ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);");
+    dbContext.Database.ExecuteSqlRaw("UPDATE assets SET ticker = SUBSTRING(ticker FROM POSITION(':' IN ticker) + 1) WHERE ticker LIKE '%:%';");
 }
 catch (Exception ex)
 {
