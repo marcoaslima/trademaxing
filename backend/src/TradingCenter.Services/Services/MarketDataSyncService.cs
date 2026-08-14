@@ -105,62 +105,120 @@ public class MarketDataSyncService : IMarketDataSyncService
 
     public async Task SyncStockPricesAsync(CancellationToken ct = default)
     {
-        // Query unique tickers from the Master Asset Catalog
         var assets = await _unitOfWork.Repository<Asset>().FindAsync(a => a.ValuationType == ValuationType.TickerMarket && !string.IsNullOrEmpty(a.Ticker), ct);
-        var tickers = assets.Select(a => a.Ticker!).Distinct().ToList();
-
-        if (!tickers.Any())
+        if (!assets.Any())
         {
             _logger.LogInformation("No active tickers found in Master Asset Catalog for price sync.");
             return;
         }
 
-        var symbolsStr = string.Join(",", tickers);
-        var url = $"https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbolsStr}";
+        var today = DateTime.Today;
+        int syncedCount = 0;
 
-        try
+        foreach (var asset in assets)
         {
-            var response = await _httpClient.GetFromJsonAsync<YahooQuoteResponseDto>(url, ct);
-            var results = response?.QuoteResponse?.Result;
+            var rawTicker = asset.Ticker!.Trim();
+            var cleanSymbol = NormalizeTicker(rawTicker);
 
-            if (results != null)
+            if (string.IsNullOrEmpty(cleanSymbol)) continue;
+
+            if (asset.Ticker != cleanSymbol)
             {
-                var today = DateTime.Today;
-                foreach (var quote in results)
+                asset.Ticker = cleanSymbol;
+                _unitOfWork.Repository<Asset>().Update(asset);
+            }
+
+            decimal price = 0;
+            var currency = asset.Currency;
+
+            // 1. Try Yahoo Finance Chart v8 API
+            var chartUrl = $"https://query2.finance.yahoo.com/v8/finance/chart/{cleanSymbol}?interval=1d";
+            try
+            {
+                var chartRes = await _httpClient.GetFromJsonAsync<YahooChartResponseDto>(chartUrl, ct);
+                var meta = chartRes?.Chart?.Result?.FirstOrDefault()?.Meta;
+                if (meta != null && meta.RegularMarketPrice > 0)
                 {
-                    if (string.IsNullOrEmpty(quote.Symbol)) continue;
+                    price = meta.RegularMarketPrice;
+                    currency = string.Equals(meta.Currency, "BRL", StringComparison.OrdinalIgnoreCase) ? Currency.BRL : Currency.USD;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Yahoo Finance chart endpoint failed for {Symbol}, trying quote batch...", cleanSymbol);
+            }
 
-                    var price = quote.RegularMarketPrice;
-                    var currency = quote.Currency == "BRL" ? Currency.BRL : Currency.USD;
-
-                    var existing = await _unitOfWork.Repository<MarketPrice>().FindAsync(m => m.Ticker == quote.Symbol && m.PriceDate.Date == today, ct);
-                    var record = existing.FirstOrDefault();
-
-                    if (record == null)
+            // 2. Fallback to Yahoo Quote v7 API
+            if (price <= 0)
+            {
+                var quoteUrl = $"https://query1.finance.yahoo.com/v7/finance/quote?symbols={cleanSymbol}";
+                try
+                {
+                    var quoteRes = await _httpClient.GetFromJsonAsync<YahooQuoteResponseDto>(quoteUrl, ct);
+                    var item = quoteRes?.QuoteResponse?.Result?.FirstOrDefault();
+                    if (item != null && item.RegularMarketPrice > 0)
                     {
-                        await _unitOfWork.Repository<MarketPrice>().AddAsync(new MarketPrice
-                        {
-                            Ticker = quote.Symbol,
-                            PriceDate = today,
-                            ClosingPrice = price,
-                            Currency = currency
-                        }, ct);
-                    }
-                    else
-                    {
-                        record.ClosingPrice = price;
-                        _unitOfWork.Repository<MarketPrice>().Update(record);
+                        price = item.RegularMarketPrice;
+                        currency = string.Equals(item.Currency, "BRL", StringComparison.OrdinalIgnoreCase) ? Currency.BRL : Currency.USD;
                     }
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to fetch price for {Symbol} from Yahoo Finance.", cleanSymbol);
+                }
+            }
 
-                await _unitOfWork.SaveChangesAsync(ct);
-                _logger.LogInformation("Stock prices updated for {Count} unique master tickers.", results.Count);
+            if (price > 0)
+            {
+                await UpsertMarketPriceAsync(cleanSymbol, today, price, currency, ct);
+                if (!string.Equals(rawTicker, cleanSymbol, StringComparison.OrdinalIgnoreCase))
+                {
+                    await UpsertMarketPriceAsync(rawTicker, today, price, currency, ct);
+                }
+                syncedCount++;
             }
         }
-        catch (Exception ex)
+
+        await _unitOfWork.SaveChangesAsync(ct);
+        _logger.LogInformation("Stock prices updated for {Count} tickers.", syncedCount);
+    }
+
+    private async Task UpsertMarketPriceAsync(string symbol, DateTime date, decimal price, Currency currency, CancellationToken ct)
+    {
+        var existing = await _unitOfWork.Repository<MarketPrice>().FindAsync(m => m.Ticker == symbol && m.PriceDate.Date == date.Date, ct);
+        var record = existing.FirstOrDefault();
+
+        if (record == null)
         {
-            _logger.LogError(ex, "Failed to sync stock prices from Yahoo Finance.");
+            await _unitOfWork.Repository<MarketPrice>().AddAsync(new MarketPrice
+            {
+                Ticker = symbol,
+                PriceDate = date.Date,
+                ClosingPrice = price,
+                Currency = currency
+            }, ct);
         }
+        else
+        {
+            record.ClosingPrice = price;
+            _unitOfWork.Repository<MarketPrice>().Update(record);
+        }
+    }
+
+    public static string NormalizeTicker(string? rawTicker)
+    {
+        if (string.IsNullOrWhiteSpace(rawTicker)) return string.Empty;
+        var ticker = rawTicker.Trim().ToUpperInvariant();
+        if (ticker.Contains(':'))
+        {
+            var parts = ticker.Split(':', 2);
+            ticker = parts[1].Trim();
+            if ((parts[0] == "BVMF" || parts[0] == "B3") && !ticker.EndsWith(".SA"))
+            {
+                ticker += ".SA";
+            }
+        }
+        return ticker;
     }
 
     public async Task SyncEconomicIndexesAsync(CancellationToken ct = default)
@@ -225,6 +283,15 @@ public record BcbSgsPointDto(
 public record YahooQuoteResponseDto([property: JsonPropertyName("quoteResponse")] YahooQuoteResultDto? QuoteResponse);
 public record YahooQuoteResultDto([property: JsonPropertyName("result")] List<YahooQuoteItemDto>? Result);
 public record YahooQuoteItemDto(
+    [property: JsonPropertyName("symbol")] string Symbol,
+    [property: JsonPropertyName("regularMarketPrice")] decimal RegularMarketPrice,
+    [property: JsonPropertyName("currency")] string Currency
+);
+
+public record YahooChartResponseDto([property: JsonPropertyName("chart")] YahooChartResultDto? Chart);
+public record YahooChartResultDto([property: JsonPropertyName("result")] List<YahooChartItemDto>? Result);
+public record YahooChartItemDto([property: JsonPropertyName("meta")] YahooChartMetaDto? Meta);
+public record YahooChartMetaDto(
     [property: JsonPropertyName("symbol")] string Symbol,
     [property: JsonPropertyName("regularMarketPrice")] decimal RegularMarketPrice,
     [property: JsonPropertyName("currency")] string Currency

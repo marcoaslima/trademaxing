@@ -148,6 +148,10 @@ public class InvestmentService : IInvestmentService
     public async Task<CreateAssetDto> CreateAssetAsync(CreateAssetDto dto, CancellationToken ct = default)
     {
         var asset = _mapper.Map<Asset>(dto);
+        if (!string.IsNullOrWhiteSpace(asset.Ticker))
+        {
+            asset.Ticker = MarketDataSyncService.NormalizeTicker(asset.Ticker);
+        }
         await _unitOfWork.Repository<Asset>().AddAsync(asset, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
@@ -161,7 +165,7 @@ public class InvestmentService : IInvestmentService
         if (asset == null) return null;
 
         asset.Name = dto.Name;
-        asset.Ticker = string.IsNullOrWhiteSpace(dto.Ticker) ? null : dto.Ticker.ToUpperInvariant();
+        asset.Ticker = string.IsNullOrWhiteSpace(dto.Ticker) ? null : MarketDataSyncService.NormalizeTicker(dto.Ticker);
         asset.AssetCategory = dto.AssetCategory;
         asset.ValuationType = dto.ValuationType;
         asset.Currency = dto.Currency;
