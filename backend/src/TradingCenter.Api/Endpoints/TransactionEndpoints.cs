@@ -26,8 +26,15 @@ public static class TransactionEndpoints
                 return Results.ValidationProblem(result.ToDictionary());
             }
 
-            var created = await transactionService.CreateTransactionAsync(dto, ct);
-            return Results.Created($"/api/v1/transactions/{created.Id}", created);
+            try
+            {
+                var created = await transactionService.CreateTransactionAsync(dto, ct);
+                return Results.Created($"/api/v1/transactions/{created.Id}", created);
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
         });
     }
 }

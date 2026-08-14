@@ -32,8 +32,15 @@ public static class InvestmentEndpoints
                 return Results.ValidationProblem(result.ToDictionary());
             }
 
-            var created = await investmentService.CreateInvestmentAsync(dto, ct);
-            return Results.Created($"/api/v1/investments/{created.Id}", created);
+            try
+            {
+                var created = await investmentService.CreateInvestmentAsync(dto, ct);
+                return Results.Created($"/api/v1/investments/{created.Id}", created);
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
         });
     }
 }

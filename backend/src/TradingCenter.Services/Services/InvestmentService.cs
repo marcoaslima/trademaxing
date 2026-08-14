@@ -66,10 +66,14 @@ public class InvestmentService : IInvestmentService
     public async Task<InvestmentDto> CreateInvestmentAsync(CreateInvestmentDto dto, CancellationToken ct = default)
     {
         var asset = await _unitOfWork.Repository<Asset>().GetByIdAsync(dto.AssetId, ct)
-            ?? throw new ArgumentException("Master Asset not found.");
+            ?? throw new ArgumentException($"Master Asset with ID '{dto.AssetId}' not found.");
+
+        var account = await _unitOfWork.Repository<Account>().GetByIdAsync(dto.AccountId, ct)
+            ?? throw new ArgumentException($"Broker Account with ID '{dto.AccountId}' not found.");
 
         var investment = _mapper.Map<Investment>(dto);
         investment.Asset = asset;
+        investment.Account = account;
 
         await _unitOfWork.Repository<Investment>().AddAsync(investment, ct);
         await _unitOfWork.SaveChangesAsync(ct);
