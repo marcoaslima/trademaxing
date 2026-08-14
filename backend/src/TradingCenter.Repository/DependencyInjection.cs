@@ -16,7 +16,8 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options =>
         {
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(connectionString)
+                   .UseSnakeCaseNamingConvention();
         });
 
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

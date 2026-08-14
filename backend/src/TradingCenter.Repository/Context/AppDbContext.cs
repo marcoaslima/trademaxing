@@ -42,6 +42,7 @@ public class AppDbContext : DbContext
         // Entity Configurations & Decimal Precision
         modelBuilder.Entity<User>(entity =>
         {
+            entity.ToTable("users");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Email).IsUnique();
             entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
@@ -52,6 +53,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Account>(entity =>
         {
+            entity.ToTable("accounts");
             entity.HasKey(e => e.Id);
             entity.HasOne(e => e.User)
                   .WithMany(u => u.Accounts)
@@ -66,6 +68,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Asset>(entity =>
         {
+            entity.ToTable("assets");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
             entity.Property(e => e.Ticker).HasMaxLength(50);
@@ -80,6 +83,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Investment>(entity =>
         {
+            entity.ToTable("investments");
             entity.HasKey(e => e.Id);
             entity.HasOne(e => e.Account)
                   .WithMany(a => a.Investments)
@@ -97,6 +101,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Transaction>(entity =>
         {
+            entity.ToTable("transactions");
             entity.HasKey(e => e.Id);
             entity.HasOne(e => e.Investment)
                   .WithMany(i => i.Transactions)
@@ -122,6 +127,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<MarketPrice>(entity =>
         {
+            entity.ToTable("market_prices");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.Ticker, e.PriceDate }).IsUnique();
             entity.Property(e => e.Ticker).HasMaxLength(50).IsRequired();
@@ -131,6 +137,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<EconomicIndex>(entity =>
         {
+            entity.ToTable("economic_indexes");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.IndexCode, e.IndexDate }).IsUnique();
             entity.Property(e => e.IndexCode).HasConversion<string>().HasMaxLength(50);
@@ -139,6 +146,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ExchangeRate>(entity =>
         {
+            entity.ToTable("exchange_rates");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.FromCurrency, e.ToCurrency, e.RateDate }).IsUnique();
             entity.Property(e => e.FromCurrency).HasConversion<string>().HasMaxLength(10);
@@ -148,6 +156,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<PortfolioSnapshot>(entity =>
         {
+            entity.ToTable("portfolio_daily_snapshots");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.UserId, e.AccountId, e.SnapshotDate }).IsUnique();
             entity.HasOne(e => e.User)
@@ -170,6 +179,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<PtaxRate>(entity =>
         {
+            entity.ToTable("ptax_rates");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.RateDate).IsUnique();
             entity.Property(e => e.BuyRate).HasPrecision(18, 8);
