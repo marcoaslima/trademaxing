@@ -232,7 +232,6 @@ async function handleRegister() {
       fieldErrors.email = 'Email already registered.';
       showSwitchToLoginPrompt.value = true;
     } else if (data?.errors) {
-      // Map ASP.NET Core ValidationProblem dictionary into field errors
       if (data.errors.Email || data.errors.email) {
         fieldErrors.email = (data.errors.Email || data.errors.email)[0];
       }
@@ -242,11 +241,13 @@ async function handleRegister() {
       if (data.errors.Name || data.errors.name) {
         fieldErrors.name = (data.errors.Name || data.errors.name)[0];
       }
-      errorMessage.value = fieldErrors.password || fieldErrors.email || fieldErrors.name || 'Validation failed for submitted inputs.';
-    } else if (data?.message) {
-      errorMessage.value = data.message;
+      errorMessage.value = fieldErrors.password || fieldErrors.email || fieldErrors.name || 'Submitted inputs failed validation.';
+    } else if (data?.title || data?.message) {
+      errorMessage.value = data.message || data.title;
+    } else if (err.message) {
+      errorMessage.value = `API Connection Error: ${err.message}. Check backend API status at /api/v1/auth/register.`;
     } else {
-      errorMessage.value = 'Registration failed. Please check inputs and server connection.';
+      errorMessage.value = 'Unable to reach API server. Check network connection.';
     }
   } finally {
     isLoading.value = false;

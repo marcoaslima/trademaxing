@@ -43,6 +43,16 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddAuthorization();
 
 // 4. OpenAPI / Swagger Definition
@@ -55,6 +65,8 @@ builder.Services.AddHostedService<DailyMarketDataSyncWorker>();
 var app = builder.Build();
 
 // Configure Middleware Pipeline
+app.UseCors("AllowAll");
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
