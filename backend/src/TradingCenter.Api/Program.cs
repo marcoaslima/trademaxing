@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using TradingCenter.Api.BackgroundServices;
@@ -63,6 +64,18 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<DailyMarketDataSyncWorker>();
 
 var app = builder.Build();
+
+// Ensure database schema contains password_hash column on existing Postgres volumes
+try
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<TradingCenter.Repository.Context.AppDbContext>();
+    dbContext.Database.ExecuteSqlRaw("ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Database schema check warning: {ex.Message}");
+}
 
 // Configure Middleware Pipeline
 app.UseCors("AllowAll");

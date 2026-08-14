@@ -142,4 +142,7 @@ CREATE TABLE ptax_rates (
 
 CREATE INDEX idx_ptax_rates_date ON ptax_rates(rate_date);
 
+-- Schema Migration Fixes for pre-existing volumes
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
+
 
