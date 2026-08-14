@@ -28,6 +28,10 @@ public static class AuthEndpoints
             {
                 return Results.BadRequest(new { message = ex.Message });
             }
+            catch (Exception ex)
+            {
+                return Results.Problem(detail: ex.Message, statusCode: 500, title: "Registration error");
+            }
         });
 
         group.MapPost("/login", async (LoginRequestDto dto, IAuthService authService, CancellationToken ct) =>

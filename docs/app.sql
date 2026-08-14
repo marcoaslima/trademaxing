@@ -7,6 +7,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
     base_currency VARCHAR(10) NOT NULL DEFAULT 'BRL',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
