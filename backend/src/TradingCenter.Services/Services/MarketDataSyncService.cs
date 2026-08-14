@@ -54,7 +54,8 @@ public class MarketDataSyncService : IMarketDataSyncService
                 var buyRate = item.CotacaoCompra;
                 var sellRate = item.CotacaoVenda;
 
-                var existingPtax = await _unitOfWork.Repository<PtaxRate>().FindAsync(p => p.RateDate.Date == date.Date, ct);
+                var utcDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
+                var existingPtax = await _unitOfWork.Repository<PtaxRate>().FindAsync(p => p.RateDate == utcDate, ct);
                 var ptax = existingPtax.FirstOrDefault();
 
                 if (ptax == null)
@@ -75,7 +76,7 @@ public class MarketDataSyncService : IMarketDataSyncService
                 }
 
                 // Also update general ExchangeRate (USD -> BRL)
-                var existingFx = await _unitOfWork.Repository<ExchangeRate>().FindAsync(e => e.FromCurrency == Currency.USD && e.ToCurrency == Currency.BRL && e.RateDate.Date == date.Date, ct);
+                var existingFx = await _unitOfWork.Repository<ExchangeRate>().FindAsync(e => e.FromCurrency == Currency.USD && e.ToCurrency == Currency.BRL && e.RateDate == utcDate, ct);
                 var fx = existingFx.FirstOrDefault();
                 if (fx == null)
                 {
@@ -185,7 +186,8 @@ public class MarketDataSyncService : IMarketDataSyncService
 
     private async Task UpsertMarketPriceAsync(string symbol, DateTime date, decimal price, Currency currency, CancellationToken ct)
     {
-        var existing = await _unitOfWork.Repository<MarketPrice>().FindAsync(m => m.Ticker == symbol && m.PriceDate.Date == date.Date, ct);
+        var targetDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
+        var existing = await _unitOfWork.Repository<MarketPrice>().FindAsync(m => m.Ticker == symbol && m.PriceDate == targetDate, ct);
         var record = existing.FirstOrDefault();
 
         if (record == null)
@@ -242,7 +244,8 @@ public class MarketDataSyncService : IMarketDataSyncService
             if (item != null && decimal.TryParse(item.Valor, NumberStyles.Any, CultureInfo.InvariantCulture, out var rateValue))
             {
                 var dailyRate = rateValue / 100m; // Convert percentage to factor
-                var existing = await _unitOfWork.Repository<EconomicIndex>().FindAsync(e => e.IndexCode == indexCode && e.IndexDate.Date == today, ct);
+                var targetDate = DateTime.SpecifyKind(today.Date, DateTimeKind.Utc);
+                var existing = await _unitOfWork.Repository<EconomicIndex>().FindAsync(e => e.IndexCode == indexCode && e.IndexDate == targetDate, ct);
                 var record = existing.FirstOrDefault();
 
                 if (record == null)

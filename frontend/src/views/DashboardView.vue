@@ -245,8 +245,7 @@
                       <th class="py-3 px-2 text-right">Quantidade</th>
                       <th class="py-3 px-2 text-right">Preço médio</th>
                       <th class="py-3 px-2 text-right">Valor atual</th>
-                      <th class="py-3 px-2 text-right">Lucro ou prejuízo ($)</th>
-                      <th class="py-3 px-3 text-right">Lucro ou prejuízo (%)</th>
+                      <th class="py-3 px-3 text-right">Lucro / Prejuízo</th>
                       <th class="py-3 px-2"></th>
                     </tr>
                   </thead>
@@ -287,14 +286,10 @@
                         {{ formatCurrency(pos.currentTotalValue, pos.currency) }}
                       </td>
 
-                      <!-- Lucro/Prejuízo ($) -->
-                      <td class="py-3.5 px-2 text-right font-semibold" :class="[pos.unrealizedGainLoss >= 0 ? 'text-[#059669]' : 'text-rose-600']">
-                        {{ pos.unrealizedGainLoss >= 0 ? '+ ' : '' }}{{ formatCurrency(pos.unrealizedGainLoss, pos.currency) }}
-                      </td>
-
-                      <!-- Lucro/Prejuízo (%) -->
-                      <td class="py-3.5 px-3 text-right font-bold" :class="[pos.unrealizedGainLossPercentage >= 0 ? 'text-[#059669]' : 'text-rose-600']">
-                        {{ pos.unrealizedGainLossPercentage >= 0 ? '+ ' : '' }}{{ pos.unrealizedGainLossPercentage.toFixed(2) }}%
+                      <!-- Lucro / Prejuízo ($ e %) -->
+                      <td class="py-3.5 px-3 text-right" :class="[pos.unrealizedGainLoss >= 0 ? 'text-[#059669]' : 'text-rose-600']">
+                        <span class="block font-bold">{{ pos.unrealizedGainLoss >= 0 ? '+ ' : '' }}{{ formatCurrency(pos.unrealizedGainLoss, pos.currency) }}</span>
+                        <span class="text-[10px] block font-semibold opacity-90">{{ pos.unrealizedGainLossPercentage >= 0 ? '+ ' : '' }}{{ pos.unrealizedGainLossPercentage.toFixed(2) }}%</span>
                       </td>
 
                       <!-- Action Button -->
