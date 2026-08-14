@@ -689,12 +689,21 @@ function getLogoUrl(logo: string) {
 
 async function openAddInvestmentModal() {
   await Promise.all([portfolioStore.fetchAccounts(), portfolioStore.fetchAssets()]);
-  if (portfolioStore.accounts.length > 0) {
-    newHolding.value.accountId = portfolioStore.accounts[0].id;
+
+  if (portfolioStore.accounts.length === 0) {
+    alert('Nenhuma conta cadastrada. Por favor, crie uma conta de corretora primeiro!');
+    showAddAccountModal.value = true;
+    return;
   }
-  if (portfolioStore.assets.length > 0) {
-    newHolding.value.assetId = portfolioStore.assets[0].id;
+
+  if (portfolioStore.assets.length === 0) {
+    alert('Nenhum ativo master cadastrado no catálogo. Por favor, cadastre um ativo master primeiro!');
+    showAddAssetModal.value = true;
+    return;
   }
+
+  newHolding.value.accountId = portfolioStore.accounts[0].id;
+  newHolding.value.assetId = portfolioStore.assets[0].id;
   showAddInvestmentModal.value = true;
 }
 
@@ -730,32 +739,40 @@ async function submitAddAsset() {
 }
 
 async function submitAddInvestment() {
-  if (!newHolding.value.accountId || !newHolding.value.assetId) return;
+  if (!newHolding.value.accountId || !newHolding.value.assetId) {
+    alert('Por favor, selecione a conta e o ativo master.');
+    return;
+  }
 
-  const inv = await portfolioStore.createInvestment({
-    accountId: newHolding.value.accountId,
-    assetId: newHolding.value.assetId,
-    customName: newHolding.value.customName || undefined,
-  });
+  try {
+    const inv = await portfolioStore.createInvestment({
+      accountId: newHolding.value.accountId,
+      assetId: newHolding.value.assetId,
+      customName: newHolding.value.customName || undefined,
+    });
 
-  const selectedAsset = portfolioStore.assets.find(a => a.id === newHolding.value.assetId);
-  const currency = selectedAsset?.currency || 'BRL';
+    const selectedAsset = portfolioStore.assets.find(a => a.id === newHolding.value.assetId);
+    const currency = selectedAsset?.currency || 'BRL';
 
-  await portfolioStore.createTransaction({
-    investmentId: inv.id,
-    accountId: newHolding.value.accountId,
-    transactionType: 'Buy',
-    transactionDate: new Date(newHolding.value.transactionDate).toISOString(),
-    quantity: newHolding.value.quantity,
-    pricePerUnit: newHolding.value.pricePerUnit,
-    totalAmount: newHolding.value.quantity * newHolding.value.pricePerUnit,
-    feeAmount: 0,
-    taxAmount: 0,
-    currency,
-    notes: 'Operação TradeMap',
-  });
+    await portfolioStore.createTransaction({
+      investmentId: inv.id,
+      accountId: newHolding.value.accountId,
+      transactionType: 'Buy',
+      transactionDate: new Date(newHolding.value.transactionDate).toISOString(),
+      quantity: newHolding.value.quantity,
+      pricePerUnit: newHolding.value.pricePerUnit,
+      totalAmount: newHolding.value.quantity * newHolding.value.pricePerUnit,
+      feeAmount: 0,
+      taxAmount: 0,
+      currency,
+      notes: 'Operação TradeMap',
+    });
 
-  showAddInvestmentModal.value = false;
-  await portfolioStore.fetchPortfolioSummary();
+    showAddInvestmentModal.value = false;
+    await portfolioStore.fetchPortfolioSummary();
+  } catch (err: any) {
+    const msg = err.response?.data?.message || err.message || 'Erro ao registrar operação.';
+    alert(`Erro ao adicionar operação: ${msg}`);
+  }
 }
 </script>

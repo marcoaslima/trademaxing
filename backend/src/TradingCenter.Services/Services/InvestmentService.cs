@@ -71,6 +71,16 @@ public class InvestmentService : IInvestmentService
         var account = await _unitOfWork.Repository<Account>().GetByIdAsync(dto.AccountId, ct)
             ?? throw new ArgumentException($"Broker Account with ID '{dto.AccountId}' not found.");
 
+        // Re-use existing investment if present for this account and asset
+        var existingList = await _unitOfWork.Repository<Investment>().FindAsync(i => i.AccountId == dto.AccountId && i.AssetId == dto.AssetId, ct);
+        var existing = existingList.FirstOrDefault();
+        if (existing != null)
+        {
+            existing.Asset = asset;
+            existing.Account = account;
+            return _mapper.Map<InvestmentDto>(existing);
+        }
+
         var investment = _mapper.Map<Investment>(dto);
         investment.Asset = asset;
         investment.Account = account;
